@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "polytope": {
+      "type": "streamableHttp",
+      "url": "http://localhost:31338/mcp",
+      "alwaysAllow": [],
+      "disabled": false
+    }
+  }
+}

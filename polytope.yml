@@ -1,0 +1,14 @@
+include:
+  - repo: gh:bluetext-io/bluetext
+  - services/couchbase-server
+  - services/python-fast-api
+  - services/react-web-app
+  - services/service-config-manager
+tools:
+  stack:
+    run:
+      - tool: load-config
+      - tool: couchbase-server
+      - tool: python-fast-api
+      - tool: react-web-app
+      - tool: "service-config-manager"
