@@ -1,6 +1,8 @@
 import type { Route } from "./+types/home";
+import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
+import { transitions } from "~/lib/transitions";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -9,11 +11,46 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+const badgeContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.04, delayChildren: 0.15 },
+  },
+};
+
+const badgeItem = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: transitions.spring,
+  },
+};
+
+const BADGES = [
+  "React 19",
+  "React Router 7",
+  "Bun Runtime",
+  "shadcn/ui Components",
+  "Tailwind CSS",
+  "TypeScript",
+  "Polytope Containerization",
+];
+
 export default function Home() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="max-w-2xl w-full">
-        <CardHeader className="text-center">
+      <motion.div
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={transitions.spring}
+        className="max-w-2xl w-full"
+      >
+        <Card className="w-full">
+          <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold mb-2">
             React Router + Bun Template
           </CardTitle>
@@ -26,15 +63,26 @@ export default function Home() {
             <p className="text-gray-600 dark:text-gray-400">
               This template includes everything you need to start building:
             </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Badge variant="secondary">React 19</Badge>
-              <Badge variant="secondary">React Router 7</Badge>
-              <Badge variant="secondary">Bun Runtime</Badge>
-              <Badge variant="secondary">shadcn/ui Components</Badge>
-              <Badge variant="secondary">Tailwind CSS</Badge>
-              <Badge variant="secondary">TypeScript</Badge>
-              <Badge variant="secondary">Polytope Containerization</Badge>
-            </div>
+            {shouldReduceMotion ? (
+              <div className="flex flex-wrap gap-2 justify-center">
+                {BADGES.map((label) => (
+                  <Badge key={label} variant="secondary">{label}</Badge>
+                ))}
+              </div>
+            ) : (
+              <motion.div
+                className="flex flex-wrap gap-2 justify-center"
+                variants={badgeContainer}
+                initial="hidden"
+                animate="visible"
+              >
+                {BADGES.map((label) => (
+                  <motion.span key={label} variants={badgeItem}>
+                    <Badge variant="secondary">{label}</Badge>
+                  </motion.span>
+                ))}
+              </motion.div>
+            )}
           </div>
           
           <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
@@ -56,6 +104,7 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
+      </motion.div>
     </div>
   );
 }

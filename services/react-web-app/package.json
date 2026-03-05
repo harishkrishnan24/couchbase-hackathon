@@ -43,6 +43,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.35.0",
     "input-otp": "^1.4.2",
     "isbot": "^5.1.27",
     "lucide-react": "^0.544.0",
@@ -50,6 +51,8 @@
     "react": "^19.1.0",
     "react-day-picker": "^9.10.0",
     "react-dom": "^19.1.0",
+    "react-fast-marquee": "^1.6.5",
+    "react-gauge-chart": "^0.5.1",
     "react-hook-form": "^7.62.0",
     "react-resizable-panels": "^3.0.6",
     "react-router": "^7.7.1",
@@ -57,7 +60,8 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "vaul": "^1.1.2",
-    "zod": "^4.1.9"
+    "zod": "^4.1.9",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@react-router/dev": "^7.7.1",

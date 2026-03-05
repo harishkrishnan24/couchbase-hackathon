@@ -4,10 +4,19 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import path from "path";
 
+const API_TARGET =
+  process.env.VITE_PYTHON_FAST_API_CLIENT_URL || "http://python-fast-api:3030";
+
 export default defineConfig({
   clearScreen: false,
   server: {
     allowedHosts: true,
+    proxy: {
+      "/api": {
+        target: API_TARGET,
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     // Explicit aliases for reliable module resolution in both dev and SSR

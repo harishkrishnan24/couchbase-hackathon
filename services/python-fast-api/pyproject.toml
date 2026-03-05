@@ -12,6 +12,10 @@ dependencies = [
     "sqlmodel==0.0.24",
     "twilio>=9.0.0",
     "uvicorn[standard]==0.35.0",
+    "scikit-learn>=1.8.0",
+    "numpy>=2.4.2",
+    "joblib>=1.5.3",
+    "httpx>=0.28.1",
 ]
 
 [project.scripts]

@@ -4,17 +4,14 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+  --font-sans: "Rajdhani", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  background-color: #05080f;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -126,11 +123,307 @@ body {
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+/* ================================================================
+   EDGEGUARD COMMAND CENTER - Industrial Sci-Fi Theme
+   ================================================================ */
+
+.edgeguard-demo {
+  --eg-bg: #05080f;
+  --eg-surface: #0c1220;
+  --eg-panel: rgba(12, 18, 32, 0.92);
+  --eg-border: #1a2744;
+  --eg-border-bright: #2a3d66;
+  --eg-muted: #3a4a5c;
+  --eg-flow: #00e5ff;
+  --eg-flow-dim: rgba(0, 229, 255, 0.35);
+  --eg-flow-glow: rgba(0, 229, 255, 0.15);
+  --eg-alert: #ffab00;
+  --eg-anomaly: #ff3d5a;
+  --eg-anomaly-dim: rgba(255, 61, 90, 0.35);
+  --eg-ok: #00e676;
+  --eg-ok-dim: rgba(0, 230, 118, 0.3);
+  --eg-text: #c8d6e5;
+  --eg-text-dim: #6b7d99;
+  --eg-text-bright: #e8f0ff;
+  --eg-pressure: 0;
+  font-family: "Rajdhani", ui-sans-serif, sans-serif;
+  font-weight: 500;
+}
+
+.edgeguard-demo .font-display {
+  font-family: "Orbitron", ui-sans-serif, sans-serif;
+}
+
+.edgeguard-demo .font-mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Glow utility classes */
+.glow-cyan {
+  filter: drop-shadow(0 0 6px var(--eg-flow)) drop-shadow(0 0 20px var(--eg-flow-dim));
+}
+.glow-cyan-box {
+  box-shadow: 0 0 12px var(--eg-flow-dim), 0 0 40px var(--eg-flow-glow), inset 0 0 12px var(--eg-flow-glow);
+}
+.glow-red {
+  filter: drop-shadow(0 0 6px var(--eg-anomaly)) drop-shadow(0 0 20px var(--eg-anomaly-dim));
+}
+.glow-red-box {
+  box-shadow: 0 0 12px var(--eg-anomaly-dim), 0 0 40px rgba(255, 61, 90, 0.15), inset 0 0 12px rgba(255, 61, 90, 0.08);
+}
+.glow-amber-box {
+  box-shadow: 0 0 12px rgba(255, 171, 0, 0.3), 0 0 40px rgba(255, 171, 0, 0.1);
+}
+.glow-green-box {
+  box-shadow: 0 0 8px var(--eg-ok-dim), 0 0 24px rgba(0, 230, 118, 0.12);
+}
+
+/* Background: layered atmosphere */
+.edgeguard-demo.demo-bg {
+  background-color: var(--eg-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.edgeguard-demo.demo-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(0, 229, 255, 0.07), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(255, 61, 90, 0.05), transparent 35%),
+    radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.02), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animated grid */
+.edgeguard-demo.demo-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(90deg, rgba(26, 39, 68, 0.4) 1px, transparent 1px),
+    linear-gradient(rgba(26, 39, 68, 0.25) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Atmosphere: scanlines + vignette via pseudo-elements (no DOM = no click interception) */
+.eg-atmosphere::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    ),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.45) 100%);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Panel cards */
+.edgeguard-demo .eg-panel {
+  background: var(--eg-panel);
+  border: 1px solid var(--eg-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.edgeguard-demo .eg-panel-glow {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 1px var(--eg-flow-dim), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.edgeguard-demo .eg-label {
+  font-family: "Orbitron", ui-sans-serif, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--eg-text-dim);
+}
+
+/* LED indicators */
+.eg-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.eg-led-online {
+  background: var(--eg-ok);
+  box-shadow: 0 0 6px var(--eg-ok), 0 0 16px var(--eg-ok-dim);
+  animation: led-pulse 2s ease-in-out infinite;
+}
+.eg-led-offline {
+  background: var(--eg-anomaly);
+  box-shadow: 0 0 6px var(--eg-anomaly), 0 0 16px var(--eg-anomaly-dim);
+  animation: led-pulse-fast 0.8s ease-in-out infinite;
+}
+
+@keyframes led-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes led-pulse-fast {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Pipe flow animation */
+@keyframes pipe-flow {
+  from { stroke-dashoffset: 40; }
+  to { stroke-dashoffset: 0; }
+}
+.pipe-flow-anim {
+  stroke-dasharray: 8 32;
+  animation: pipe-flow 1.2s linear infinite;
+}
+
+@keyframes pipe-flow-reverse {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 40; }
+}
+
+/* Turbine spin */
+@keyframes turbine-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.turbine-spin {
+  animation: turbine-spin 3s linear infinite;
+}
+.turbine-spin-fast {
+  animation: turbine-spin 1s linear infinite;
+}
+
+/* Shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+.eg-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Pressure border pulse */
+@keyframes pressure-pulse {
+  0%, 100% { border-color: var(--eg-border); }
+  50% { border-color: var(--eg-anomaly); }
+}
+.eg-pressure-border {
+  animation: pressure-pulse 1.5s ease-in-out infinite;
+}
+
+/* Compaction flash */
+@keyframes compaction-flash {
+  0% { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+
+/* Particle trail */
+@keyframes particle-glow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+/* Entry animation for panels */
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.eg-enter {
+  animation: slide-up-fade 0.5s ease-out both;
+}
+
+/* Valve rotation */
+@keyframes valve-close {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(90deg); }
+}
+@keyframes valve-open {
+  from { transform: rotate(90deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* Status banner flash */
+@keyframes banner-flash {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+
+/* Wave animation for buffer fluid surface */
+@keyframes wave {
+  0% { d: path("M0,0 Q15,-3 30,0 Q45,3 60,0"); }
+  50% { d: path("M0,0 Q15,3 30,0 Q45,-3 60,0"); }
+  100% { d: path("M0,0 Q15,-3 30,0 Q45,3 60,0"); }
+}
+
+/* Number counter tick */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* AI chip subtle glow pulse */
+@keyframes ai-pulse {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.25; }
+}
+.ai-pulse {
+  animation: ai-pulse 3.5s ease-in-out infinite;
+}
+
+/* Sparkline fade */
+.eg-sparkline line {
+  stroke-linecap: round;
+}
+
+/* Capacity bar animations */
+.eg-capacity-bar {
+  transition: width 0.4s ease-out, background-color 0.6s ease;
+}
+
+/* Scrollbar styling for edge panels */
+.edgeguard-demo ::-webkit-scrollbar,
+.eg-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.edgeguard-demo ::-webkit-scrollbar-track,
+.eg-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.edgeguard-demo ::-webkit-scrollbar-thumb,
+.eg-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--eg-muted);
+  border-radius: 4px;
+}
+.eg-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--eg-muted) transparent;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
 }

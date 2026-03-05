@@ -2,12 +2,13 @@ import {
   isRouteErrorResponse,
   Links,
   Meta,
-  Outlet,
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { motion, useReducedMotion } from "framer-motion";
 
 import type { Route } from "./+types/root";
+import { PageTransition } from "~/components/PageTransition";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -19,39 +20,18 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap",
   },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        {/* Theme detection script - runs before React hydration */}
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              // Apply theme based on system preference
-              const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-              if (prefersDark) {
-                document.documentElement.classList.add('dark');
-              }
-
-              // Listen for theme changes
-              window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                if (e.matches) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              });
-            })();
-          `
-        }} />
       </head>
       <body>
         {children}
@@ -63,7 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return <PageTransition />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
@@ -83,7 +63,32 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
+    <ErrorBoundaryContent
+      message={message}
+      details={details}
+      stack={stack}
+    />
+  );
+}
+
+function ErrorBoundaryContent({
+  message,
+  details,
+  stack,
+}: {
+  message: string;
+  details: string;
+  stack?: string;
+}) {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <motion.main
+      className="pt-16 p-4 container mx-auto"
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+    >
       <h1>{message}</h1>
       <p>{details}</p>
       {stack && (
@@ -91,6 +96,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
           <code>{stack}</code>
         </pre>
       )}
-    </main>
+    </motion.main>
   );
 }
