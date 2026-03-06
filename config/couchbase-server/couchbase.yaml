@@ -56,5 +56,4 @@ buckets:
           readings: {}       # Readings synced from edge via Sync Gateway
           anomalies: {}      # Anomalies synced from edge via Sync Gateway
           compacted: {}      # Compacted blocks synced from edge
-          training_data: {}  # Training dataset for Isolation Forest (seeded at startup)
           model_state: {}    # Model metadata: version, contamination, threshold, feature names

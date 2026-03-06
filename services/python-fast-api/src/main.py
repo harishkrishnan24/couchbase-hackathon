@@ -24,12 +24,15 @@ logger = log.get_logger(__name__)
 
 async def _init_couchbase_and_model(app: FastAPI) -> None:
     """
-    Initialise Couchbase connection, seed training data, and train the
-    Isolation Forest model. Runs in a background thread so the event loop
-    is not blocked during the potentially slow Couchbase wait-until-ready.
+    Initialise Couchbase connection and load the pre-trained Isolation Forest
+    model from disk. Runs in a background thread so the event loop is not
+    blocked during the potentially slow Couchbase wait-until-ready.
+
+    The model must be pre-trained by running train_model.py before starting
+    the server.
     """
     import db
-    from anomaly_detector import detector, generate_training_samples
+    from anomaly_detector import detector
 
     loop = asyncio.get_event_loop()
 
@@ -44,20 +47,15 @@ async def _init_couchbase_and_model(app: FastAPI) -> None:
         app.state.db_ready = False
         return
 
-    # Try to load a cached model from disk first
+    # Load the pre-trained model from disk
     if detector.load_from_disk():
-        logger.info(f"Loaded Isolation Forest from disk cache ({detector._training_samples} samples).")
+        logger.info(f"Loaded Isolation Forest from disk ({detector._training_samples} samples).")
     else:
-        # Generate training data and train
-        logger.info("Generating training data and training Isolation Forest...")
-        training_samples = await loop.run_in_executor(
-            None, generate_training_samples
+        logger.warning(
+            "No pre-trained model found on disk. "
+            "Run 'python train_model.py' from services/python-fast-api to generate it. "
+            "Anomaly scoring will return neutral scores until a model is loaded."
         )
-        await loop.run_in_executor(None, detector.train, training_samples)
-        logger.info(f"Isolation Forest trained on {len(training_samples)} samples.")
-
-        # Seed training data into Couchbase in the background
-        asyncio.create_task(db.seed_training_data_if_empty(training_samples))
 
     # Persist model metadata to Couchbase
     asyncio.create_task(db.save_model_state(detector.get_status_dict()))

@@ -45,7 +45,6 @@ _client: CouchbaseClient | None = None
 central_readings:     Keyspace | None = None
 central_anomalies:    Keyspace | None = None
 central_compacted:    Keyspace | None = None
-central_training:     Keyspace | None = None
 central_model_state:  Keyspace | None = None
 
 _initialized = False
@@ -55,7 +54,7 @@ def init_db() -> None:
     """Connect to Couchbase Server and open central-scope keyspace handles."""
     global _client, _initialized
     global central_readings, central_anomalies, central_compacted
-    global central_training, central_model_state
+    global central_model_state
 
     if _initialized:
         return
@@ -63,11 +62,10 @@ def init_db() -> None:
     _client = get_client("couchbase-server")
 
     # Central scope — synced from Edge Server via Sync Gateway → Couchbase Server
-    central_readings    = _client.get_keyspace("readings",      scope_name="central")
-    central_anomalies   = _client.get_keyspace("anomalies",     scope_name="central")
-    central_compacted   = _client.get_keyspace("compacted",     scope_name="central")
-    central_training    = _client.get_keyspace("training_data", scope_name="central")
-    central_model_state = _client.get_keyspace("model_state",   scope_name="central")
+    central_readings    = _client.get_keyspace("readings",  scope_name="central")
+    central_anomalies   = _client.get_keyspace("anomalies", scope_name="central")
+    central_compacted   = _client.get_keyspace("compacted", scope_name="central")
+    central_model_state = _client.get_keyspace("model_state", scope_name="central")
 
     _initialized = True
 
@@ -151,28 +149,8 @@ async def count_async(ks: Keyspace | None) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Training data helpers
+# Model state helpers
 # ---------------------------------------------------------------------------
-
-async def seed_training_data_if_empty(samples: list[dict]) -> bool:
-    """
-    Write training samples to central.training_data if the collection is empty.
-    Returns True if seeding was performed.
-    """
-    if central_training is None:
-        return False
-    try:
-        n = await count_async(central_training)
-        if n > 0:
-            return False
-        for i, sample in enumerate(samples):
-            doc = {"features": sample, "source": "generated", "seq": i}
-            await insert_async(central_training, doc, key=f"train_{i}")
-        return True
-    except Exception as e:
-        _log_warn(f"Seed training data failed: {e}")
-        return False
-
 
 async def save_model_state(state_dict: dict) -> None:
     """Persist Isolation Forest metadata to central.model_state."""

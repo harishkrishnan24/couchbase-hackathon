@@ -202,6 +202,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Trained ML model artifacts (auto-generated, do not commit binaries)
-model/*.joblib
-model/*.pkl
+# Trained ML model artifacts — committed intentionally (run train_model.py to regenerate)
+# model/*.joblib
+# model/*.pkl
