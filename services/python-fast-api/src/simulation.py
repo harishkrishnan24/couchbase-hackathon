@@ -2,8 +2,8 @@
 EdgeGuard simulation engine.
 
 Generates realistic multi-feature wind-turbine sensor data, scores it with
-Isolation Forest, persists to Couchbase edge scope, and drains via Sync
-Gateway (with direct-CB fallback) to the central scope.
+Isolation Forest, persists to Couchbase Edge Server via REST API, and lets
+Edge Server replicate continuously to Sync Gateway → Couchbase Server.
 """
 
 from __future__ import annotations
@@ -13,8 +13,6 @@ import math
 import os
 import time
 from typing import Any
-
-import httpx
 
 import db
 from anomaly_detector import (
@@ -40,27 +38,6 @@ DRAIN_INTERVAL_MS = 1200
 TURBINE_HISTORY_SIZE = 30
 TIER1_WINDOW_SIZE = 5
 TIER2_MERGE_COUNT = 4
-
-# Sync Gateway connection — read from env, fall back gracefully
-_SG_HOST     = os.environ.get("SYNC_GATEWAY_HOST",     "sync-gateway")
-_SG_PORT     = os.environ.get("SYNC_GATEWAY_PORT",     "4984")
-_SG_DB       = os.environ.get("SYNC_GATEWAY_DB",       "edgeguard")
-_SG_USER     = os.environ.get("SYNC_GATEWAY_USERNAME", "edge_device")
-_SG_PASSWORD = os.environ.get("SYNC_GATEWAY_PASSWORD", "edge_password")
-_SG_BASE_URL = f"http://{_SG_HOST}:{_SG_PORT}/{_SG_DB}"
-
-# Shared httpx client (created lazily)
-_http_client: httpx.AsyncClient | None = None
-
-
-def _get_http_client() -> httpx.AsyncClient:
-    global _http_client
-    if _http_client is None:
-        _http_client = httpx.AsyncClient(
-            auth=(_SG_USER, _SG_PASSWORD),
-            timeout=5.0,
-        )
-    return _http_client
 
 
 # ---------------------------------------------------------------------------
@@ -315,36 +292,16 @@ class SimulationEngine:
     # ------------------------------------------------------------------
 
     async def _persist_edge_reading(self, point_dict: dict, key: str) -> None:
-        await db.insert_async(db.edge_readings, point_dict, key=key)
+        """Write reading to Edge Server; Edge Server replicates to Sync Gateway → Couchbase Server."""
+        await db.edge_put_async(point_dict, key)
 
     async def _persist_edge_anomaly(self, point_dict: dict, key: str) -> None:
-        await db.insert_async(db.edge_anomalies, point_dict, key=key)
+        """Write anomaly to Edge Server; Edge Server replicates to Sync Gateway → Couchbase Server."""
+        await db.edge_put_async(point_dict, f"anomaly_{key}")
 
     async def _persist_compacted(self, block_dict: dict) -> None:
-        await db.insert_async(db.edge_compacted, block_dict)
-
-    async def _sync_to_central(self, item: dict, doc_id: str) -> None:
-        """
-        Push a document to central storage.
-        Tries Sync Gateway first; falls back to direct Couchbase write.
-        """
-        sg_ok = await self._sync_via_gateway(item, doc_id)
-        if not sg_ok:
-            # Fallback: write directly to Couchbase central
-            ks = db.central_anomalies if item.get("type") == "anomaly" else db.central_readings
-            await db.insert_async(ks, item, key=doc_id)
-
-    async def _sync_via_gateway(self, item: dict, doc_id: str) -> bool:
-        """PUT document to Sync Gateway. Returns True on success."""
-        try:
-            client = _get_http_client()
-            # For named-collection SG: /edgeguard.central.readings/{doc_id}
-            collection = "anomalies" if item.get("type") == "anomaly" else "readings"
-            url = f"{_SG_BASE_URL}.central.{collection}/{doc_id}"
-            response = await client.put(url, json=item, timeout=3.0)
-            return response.status_code in (200, 201)
-        except Exception:
-            return False
+        """Write compacted block to Edge Server; Edge Server replicates to Sync Gateway → Couchbase Server."""
+        await db.edge_put_async(block_dict, f"compact_{_now_ms()}")
 
     # ------------------------------------------------------------------
     # Emit loop
@@ -383,7 +340,7 @@ class SimulationEngine:
             })
             self._publish_metrics()
 
-            # Persist to Couchbase edge scope (non-blocking)
+            # Persist to Edge Server via REST API (non-blocking)
             asyncio.create_task(self._persist_edge_reading(point_dict, point.id))
             if point.type == "anomaly":
                 asyncio.create_task(self._persist_edge_anomaly(point_dict, point.id))
@@ -415,12 +372,8 @@ class SimulationEngine:
                 "lastSyncTimestamp": self.last_sync_timestamp,
             })
             self._publish_metrics()
-
-            # Sync to central via Sync Gateway (or direct CB fallback)
-            doc_id = item.get("id") or f"item_{_now_ms()}"
-            asyncio.create_task(self._sync_to_central(item, doc_id))
-            # Remove from edge scope after sync
-            asyncio.create_task(db.remove_async(db.edge_readings, doc_id))
+            # Edge Server continuously replicates to Sync Gateway → Couchbase Server;
+            # no explicit push needed here.
 
     # ------------------------------------------------------------------
     # Metrics / status helpers

@@ -1,27 +1,46 @@
 """
 Couchbase persistence layer for EdgeGuard.
 
-Initialises keyspace handles for edge and central scopes.
-All writes are fire-and-forget via asyncio.to_thread so they never
-block the async simulation loops.
+Edge writes go to Couchbase Edge Server via its REST API; the Edge Server
+continuously replicates to Sync Gateway → Couchbase Server automatically.
+Central reads still use the Couchbase SDK directly against the central scope.
+All writes are fire-and-forget so they never block the async simulation loops.
 """
 
 from __future__ import annotations
 
 import asyncio
+import os
 from typing import Any
+
+import httpx
 
 from clients.couchbase.couchbase import CouchbaseClient, get_client, Keyspace
 
 # ---------------------------------------------------------------------------
-# Lazy keyspace handles — populated on init_db()
+# Edge Server REST client — writes land here, Edge Server replicates onward
+# ---------------------------------------------------------------------------
+
+_ES_HOST     = os.environ.get("EDGE_SERVER_HOST", "couchbase-edge-server")
+_ES_PORT     = os.environ.get("EDGE_SERVER_PORT", "59840")
+_ES_DB       = os.environ.get("EDGE_SERVER_DB",   "main")
+_ES_BASE_URL = f"http://{_ES_HOST}:{_ES_PORT}/{_ES_DB}"
+
+_es_client: httpx.AsyncClient | None = None
+
+
+def _get_es_client() -> httpx.AsyncClient:
+    global _es_client
+    if _es_client is None:
+        _es_client = httpx.AsyncClient(timeout=5.0)
+    return _es_client
+
+
+# ---------------------------------------------------------------------------
+# Central scope keyspace handles — populated on init_db()
 # ---------------------------------------------------------------------------
 
 _client: CouchbaseClient | None = None
-
-edge_readings:   Keyspace | None = None
-edge_anomalies:  Keyspace | None = None
-edge_compacted:  Keyspace | None = None
 
 central_readings:     Keyspace | None = None
 central_anomalies:    Keyspace | None = None
@@ -33,9 +52,8 @@ _initialized = False
 
 
 def init_db() -> None:
-    """Connect to Couchbase and open all keyspace handles."""
+    """Connect to Couchbase Server and open central-scope keyspace handles."""
     global _client, _initialized
-    global edge_readings, edge_anomalies, edge_compacted
     global central_readings, central_anomalies, central_compacted
     global central_training, central_model_state
 
@@ -44,12 +62,7 @@ def init_db() -> None:
 
     _client = get_client("couchbase-server")
 
-    # Edge scope — simulates Couchbase Lite on the edge device
-    edge_readings  = _client.get_keyspace("readings",  scope_name="edge")
-    edge_anomalies = _client.get_keyspace("anomalies", scope_name="edge")
-    edge_compacted = _client.get_keyspace("compacted", scope_name="edge")
-
-    # Central scope — managed by Couchbase Server, synced via Sync Gateway
+    # Central scope — synced from Edge Server via Sync Gateway → Couchbase Server
     central_readings    = _client.get_keyspace("readings",      scope_name="central")
     central_anomalies   = _client.get_keyspace("anomalies",     scope_name="central")
     central_compacted   = _client.get_keyspace("compacted",     scope_name="central")
@@ -60,7 +73,22 @@ def init_db() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Async fire-and-forget helpers
+# Edge Server helpers — write via REST API, replication to CB is automatic
+# ---------------------------------------------------------------------------
+
+async def edge_put_async(doc: dict, key: str) -> None:
+    """PUT a document into the Edge Server; Edge Server replicates it to Sync Gateway."""
+    try:
+        client = _get_es_client()
+        response = await client.put(f"{_ES_BASE_URL}/{key}", json=doc)
+        if response.status_code not in (200, 201):
+            _log_warn(f"Edge Server PUT failed ({key}): HTTP {response.status_code} — {response.text[:120]}")
+    except Exception as e:
+        _log_warn(f"Edge Server PUT failed ({key}): {e}")
+
+
+# ---------------------------------------------------------------------------
+# Async fire-and-forget helpers (central Couchbase SDK)
 # ---------------------------------------------------------------------------
 
 async def _run_in_thread(fn, *args, **kwargs) -> Any:

@@ -30,11 +30,9 @@ tools:
             - { name: COUCHBASE_SERVER_PASSWORD, value: pt.secret couchbase-server-password }
             - { name: COUCHBASE_SERVER_BUCKET, value: pt.value couchbase-server-main-bucket-name }
             - { name: COUCHBASE_SERVER_PROTOCOL, value: pt.value couchbase-server-protocol }
-            - { name: SYNC_GATEWAY_HOST, value: pt.value sync-gateway-host }
-            - { name: SYNC_GATEWAY_PORT, value: pt.value sync-gateway-port }
-            - { name: SYNC_GATEWAY_DB, value: pt.value sync-gateway-db }
-            - { name: SYNC_GATEWAY_USERNAME, value: pt.value sync-gateway-username }
-            - { name: SYNC_GATEWAY_PASSWORD, value: edge_password }
+            - { name: EDGE_SERVER_HOST, value: pt.value couchbase-edge-server-host }
+            - { name: EDGE_SERVER_PORT, value: pt.value couchbase-edge-server-port }
+            - { name: EDGE_SERVER_DB, value: pt.value couchbase-edge-server-database }
           mounts:
             - { path: /root/.cache/, source: { type: volume, scope: project, id: python-fast-api-dependency-cache } }
             - { path: /clients/python, source: { type: repo, path: /clients/python } }
