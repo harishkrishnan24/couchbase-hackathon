@@ -32,17 +32,24 @@ export interface DataPoint {
   timestamp: number;
 }
 
-/** Single block after compaction (replaces multiple normal points). */
+/** Single block after compaction (replaces multiple normal points). DataPoint-like: id, seq, sourceTurbine, sensors, value, timestamp. */
 export interface CompactedBlock {
   type: "compacted";
-  avgValue: number;
-  minValue: number;
-  maxValue: number;
-  stdDev: number;
-  count: number;
+  id?: string;
+  seq?: number;
+  sourceTurbine?: number;
+  sensors?: SensorData;
+  value?: number;
+  timestamp?: number;
   range: string;
   /** 1 = windowed (5-pt), 2 = merged (multi-window) */
   tier: 1 | 2;
+  count: number;
+  avgValue?: number;
+  minValue: number;
+  maxValue: number;
+  stdDev: number;
+  avgAnomalyScore: number;
 }
 
 /** Item in edge or central storage. */

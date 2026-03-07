@@ -42,6 +42,11 @@ async def _init_couchbase_and_model(app: FastAPI) -> None:
         await loop.run_in_executor(None, db.init_db)
         logger.info("Couchbase connected. Keyspaces initialised.")
         app.state.db_ready = True
+        state = await db.load_pipeline_state()
+        if state is not None and "sequence_number" in state:
+            n = state["sequence_number"]
+            engine.sequence_number = n
+            logger.info("Restored pipeline sequence_number from Couchbase: %s", n)
     except Exception as exc:
         logger.warning(f"Couchbase connection failed (running without persistence): {exc}")
         app.state.db_ready = False

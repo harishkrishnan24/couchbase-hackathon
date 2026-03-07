@@ -96,7 +96,7 @@ The core backend. FastAPI (Python 3.13) app that simulates turbine sensor data, 
   - The script generates 5,000 synthetic correlated turbine readings, fits the Isolation Forest, and saves `model/isolation_forest.joblib`. Takes ~0.2s. Commit the resulting file so the container picks it up without any training step.
   - `POST /api/model/retrain` triggers an equivalent in-process retrain at runtime via the API.
 
-- **Compaction:** Tier 1 groups 5 normal readings → `CompactedBlock` (avg/min/max/stddev). Tier 2 merges 4 Tier-1 blocks. Anomalies are always preserved full-fidelity. Edge buffer cap: 25 items, compaction threshold: 20.
+- **Compaction:** When triggered (buffer threshold 20), merge all continuous normal and compacted readings into a single unified `CompactedBlock` (avg/min/max/stddev). Anomalies act as boundaries and are always preserved full-fidelity. Edge buffer cap: 25 items.
 
 - **Dependencies:** `scikit-learn`, `numpy`, `joblib`, `httpx`, `fastapi`, `uvicorn`, Couchbase Python SDK.
 

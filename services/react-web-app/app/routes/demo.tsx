@@ -2,7 +2,6 @@ import type { Route } from "./+types/demo";
 import { usePipelineLoop } from "~/hooks/usePipelineLoop";
 import { useEventStream } from "~/hooks/useEventStream";
 import { PipelineView } from "~/components/pipeline/PipelineView";
-import { PipelineAuditTicker } from "~/components/pipeline/PipelineAuditTicker";
 import { HeaderBar } from "~/components/dashboard/HeaderBar";
 import { TurbineCard } from "~/components/dashboard/TurbineCard";
 import { StoragePanel } from "~/components/dashboard/StoragePanel";
@@ -199,8 +198,6 @@ export default function Demo() {
             <StoragePanel delay={0.2} />
           </div>
         </div>
-
-        <PipelineAuditTicker />
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import type {
   EdgeUpdatePayload,
   CentralUpdatePayload,
   CompactionPayload,
+  SnapshotPayload,
   SystemStatus,
   CompactionLogEntry as ApiCompactionLogEntry,
 } from "~/lib/api";
@@ -33,6 +34,7 @@ export interface PipelineState {
   compactionLogs: CompactionLogEntry[];
   compactionCount: number;
   forcedAnomalyTurbine: number | null;
+  enabledTurbines: number[];
 
   perTurbineHistory: Record<number, DataPoint[]>;
   totalPacketsEmitted: number;
@@ -54,6 +56,9 @@ export interface PipelineState {
   applyCompaction: (data: CompactionPayload) => void;
   applyMetrics: (data: Metrics) => void;
   applySystemStatus: (data: SystemStatus) => void;
+  applySnapshot: (data: SnapshotPayload) => void;
+  setCentralStorage: (items: EdgeGuardItem[]) => void;
+  setEdgeStorage: (items: EdgeGuardItem[]) => void;
 }
 
 export const usePipelineStore = create<PipelineState>((set, get) => ({
@@ -67,6 +72,7 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
   compactionLogs: [],
   compactionCount: 0,
   forcedAnomalyTurbine: null,
+  enabledTurbines: [],  // default: all turbines off
 
   perTurbineHistory: { 1: [], 2: [], 3: [] },
   totalPacketsEmitted: 0,
@@ -126,25 +132,41 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
           { id: point.id, progress: 0, segment: "to-buffer" as const, payload: point },
         ],
         perTurbineHistory: history,
-        totalPacketsEmitted: s.totalPacketsEmitted + 1,
-        totalAnomalies: s.totalAnomalies + (point.type === "anomaly" ? 1 : 0),
       };
     }),
 
+  // Updates edge only; never touches central.
   applyEdgeUpdate: (data) =>
-    set({
-      edgeStorage: [...get().edgeStorage.slice(-(EDGE_CAPACITY - 1)), data.item],
-      edgePressure: data.pressure,
+    set((s) => {
+      const id = "id" in data.item ? (data.item as DataPoint).id : undefined;
+      const prev = s.edgeStorage;
+      const idx = id != null ? prev.findIndex((x) => "id" in x && (x as DataPoint).id === id) : -1;
+      const next =
+        idx >= 0
+          ? prev.map((x, i) => (i === idx ? data.item : x))
+          : [...prev.slice(-(EDGE_CAPACITY - 1)), data.item];
+      return { edgeStorage: next, edgePressure: data.pressure };
     }),
 
+  // Adds to central and removes one from edge; never assign edge to central or vice versa.
   applyCentralUpdate: (data) =>
     set((s) => {
       const id =
         "id" in data.item
           ? (data.item as DataPoint).id
           : `drain_${Date.now()}`;
+      const prev = s.centralStorage;
+      const stableId = "id" in data.item ? (data.item as DataPoint).id : null;
+      const idx =
+        stableId != null
+          ? prev.findIndex((x) => "id" in x && (x as DataPoint).id === stableId)
+          : -1;
+      const nextCentral =
+        idx >= 0
+          ? prev.map((x, i) => (i === idx ? data.item : x))
+          : [...prev, data.item];
       return {
-        centralStorage: [...s.centralStorage, data.item],
+        centralStorage: nextCentral,
         lastSyncTimestamp: data.lastSyncTimestamp,
         lastDrainedItemId: id,
         edgeStorage: s.edgeStorage.slice(1),
@@ -178,5 +200,26 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
       isRunning: data.isRunning,
       isOnline: data.isOnline,
       isInitialized: data.isInitialized,
+      enabledTurbines: data.enabledTurbines ?? [],
     }),
+
+  // Snapshot: set edge and central only from backend edgeStorage/centralStorage; do not derive one from the other.
+  applySnapshot: (data) =>
+    set({
+      edgeStorage: data.edgeStorage ?? [],
+      centralStorage: data.centralStorage ?? [],
+      compactionLogs: data.compactionLogs ?? [],
+      compactionCount: data.compactionCount ?? 0,
+      totalPacketsEmitted: data.metrics?.totalPacketsEmitted ?? 0,
+      totalAnomalies: data.metrics?.totalAnomalies ?? 0,
+      edgePressure: data.metrics?.edgePressure ?? 0,
+      lastSyncTimestamp: data.metrics?.lastSyncTimestamp ?? null,
+      isRunning: data.systemStatus?.isRunning ?? false,
+      isOnline: data.systemStatus?.isOnline ?? true,
+      isInitialized: data.systemStatus?.isInitialized ?? false,
+      enabledTurbines: data.systemStatus?.enabledTurbines ?? [],
+    }),
+
+  setCentralStorage: (items) => set({ centralStorage: items }),
+  setEdgeStorage: (items) => set({ edgeStorage: items }),
 }));

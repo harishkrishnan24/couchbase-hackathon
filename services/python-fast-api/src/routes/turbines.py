@@ -1,8 +1,14 @@
 from fastapi import APIRouter, HTTPException
 
+from pydantic import BaseModel
+
 from simulation import engine, TURBINE_COUNT
 
 turbines_router = APIRouter(prefix="/api/turbines", tags=["turbines"])
+
+
+class TurbineEnabledBody(BaseModel):
+    enabled: bool
 
 
 def _validate_turbine(turbine_id: int) -> None:
@@ -11,6 +17,13 @@ def _validate_turbine(turbine_id: int) -> None:
             status_code=404,
             detail=f"Turbine {turbine_id} not found. Valid range: 1-{TURBINE_COUNT}",
         )
+
+
+@turbines_router.patch("/{turbine_id}")
+async def set_turbine_enabled(turbine_id: int, body: TurbineEnabledBody):
+    _validate_turbine(turbine_id)
+    engine.set_turbine_enabled(turbine_id, body.enabled)
+    return {"ok": True}
 
 
 @turbines_router.post("/{turbine_id}/anomaly")

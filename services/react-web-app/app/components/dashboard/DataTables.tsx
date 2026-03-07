@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePipelineStore } from "~/stores/pipelineStore";
 import type { EdgeGuardItem } from "~/types/edgeguard";
@@ -7,49 +7,38 @@ import { isDataPoint, isCompactedBlock, SENSOR_RANGES, sensorColor } from "~/typ
 const MAX_ROWS = 10;
 
 // ---------------------------------------------------------------------------
-// Sensor detail panel (expanded row)
+// Sensor values row (inline under main data)
 // ---------------------------------------------------------------------------
 
-function SensorDetailPanel({ sensors }: { sensors: NonNullable<import("~/types/edgeguard").DataPoint["sensors"]> }) {
+function SensorValuesRow({ sensors }: { sensors: NonNullable<import("~/types/edgeguard").DataPoint["sensors"]> }) {
   const keys = ["temperature", "vibration", "rpm", "powerOutput", "windSpeed", "bladePitch"] as const;
-  return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.18, ease: "easeInOut" }}
-      className="overflow-hidden"
-    >
-      <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 px-2 py-2 border-t border-[var(--eg-border)]/40 bg-[var(--eg-surface)]/50">
-        {keys.map((key) => {
-          const meta  = SENSOR_RANGES[key];
-          const value = sensors[key];
-          const color = sensorColor(key, value);
-          const span     = meta.max - meta.min;
-          const fraction = Math.max(0, Math.min(1, (value - meta.min) / span));
+  const abbreviations: Record<string, string> = {
+    temperature: "TMP",
+    vibration: "VIB",
+    rpm: "RPM",
+    powerOutput: "PWR",
+    windSpeed: "WND",
+    bladePitch: "PTC",
+  };
 
-          return (
-            <div key={key} className="flex flex-col gap-[2px]">
-              <div className="flex items-center justify-between">
-                <span className="font-display text-[7px] tracking-[0.1em] text-[var(--eg-text-dim)]">
-                  {meta.label}
-                </span>
-                <span className="font-mono text-[8px] font-semibold" style={{ color }}>
-                  {value % 1 === 0 ? value : value.toFixed(1)}
-                  <span className="text-[6px] text-[var(--eg-text-dim)] ml-[1px]">{meta.unit}</span>
-                </span>
-              </div>
-              <div className="h-[2px] rounded-full bg-[var(--eg-border)] overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{ width: `${fraction * 100}%`, backgroundColor: color }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </motion.div>
+  return (
+    <div className="flex flex-row items-center justify-between px-2 pb-1.5 pt-0.5 gap-2 overflow-hidden">
+      {keys.map((key) => {
+        const value = sensors[key];
+        const color = sensorColor(key, value);
+
+        return (
+          <div key={key} className="flex items-center gap-1 min-w-0">
+            <span className="font-display text-[7px] tracking-wider text-[var(--eg-text-dim)] shrink-0">
+              {abbreviations[key]}:
+            </span>
+            <span className="font-mono text-[8px] font-semibold truncate" style={{ color }}>
+              {value % 1 === 0 ? value : value.toFixed(1)}
+            </span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -59,7 +48,7 @@ function SensorDetailPanel({ sensors }: { sensors: NonNullable<import("~/types/e
 
 function itemKey(item: EdgeGuardItem, index: number): string {
   if (isDataPoint(item))       return item.id;
-  if (isCompactedBlock(item))  return `compact_${item.range}_${item.tier}`;
+  if (isCompactedBlock(item))  return (item as import("~/types/edgeguard").CompactedBlock).id ?? `compact_${item.range}_${item.tier}`;
   return `item_${index}`;
 }
 
@@ -95,10 +84,9 @@ function TableShell({
       </div>
 
       {/* Table header */}
-      <div className="grid grid-cols-[50px_40px_60px_60px_60px] gap-1 px-2 py-1 text-[8px] font-display tracking-[0.1em] text-[var(--eg-text-dim)] border-b border-[var(--eg-border)] shrink-0">
+      <div className="grid grid-cols-[50px_40px_80px_60px] gap-1 px-2 py-1 text-[8px] font-display tracking-[0.1em] text-[var(--eg-text-dim)] border-b border-[var(--eg-border)] shrink-0">
         <span>SEQ</span>
         <span>SRC</span>
-        <span>VALUE</span>
         <span>SCORE</span>
         <span>TYPE</span>
       </div>
@@ -119,12 +107,10 @@ function TableShell({
 
 function DataRow({
   item,
-  isExpanded,
-  onToggle,
+  key,
 }: {
   item: EdgeGuardItem;
-  isExpanded: boolean;
-  onToggle: () => void;
+  key?: React.Key;
 }) {
   if (isDataPoint(item)) {
     const isAnomaly = item.type === "anomaly";
@@ -136,62 +122,63 @@ function DataRow({
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 20 }}
-        transition={{ duration: 0.15 }}
-        className={`border-b border-[var(--eg-border)]/30 ${isAnomaly ? "bg-[var(--eg-anomaly)]/5" : ""}`}
+        transition={{ duration: 0.08 }}
+        className={`border-b border-[var(--eg-border)]/30 flex flex-col ${isAnomaly ? "bg-[var(--eg-anomaly)]/5" : ""}`}
       >
-        {/* Compact row */}
+        {/* Main data row */}
         <div
-          className={`grid grid-cols-[50px_40px_60px_60px_60px] gap-1 px-2 py-1 text-[11px] font-mono ${hasSensors ? "cursor-pointer hover:bg-[var(--eg-border)]/10" : ""}`}
-          onClick={hasSensors ? onToggle : undefined}
+          className="grid grid-cols-[50px_40px_80px_60px] gap-1 px-2 py-1 pt-1.5 text-[11px] font-mono items-center"
         >
           <span className="text-[var(--eg-text-dim)]">#{item.seq}</span>
           <span className="text-[var(--eg-text-dim)]">T{item.sourceTurbine}</span>
-          <span className="text-[var(--eg-text-bright)]">{item.value.toFixed(0)}</span>
           <span
             style={{ color: isAnomaly ? "var(--eg-anomaly)" : "var(--eg-ok)" }}
             className="font-bold"
           >
-            {item.anomalyScore.toFixed(3)}
+            {(item.anomalyScore * 100).toFixed(1)}%
           </span>
           <div className="flex items-center gap-1">
             <span className={`font-bold ${isAnomaly ? "text-[var(--eg-anomaly)]" : "text-[var(--eg-ok)]"}`}>
               {isAnomaly ? "ANOMALY" : "NORMAL"}
             </span>
-            {hasSensors && (
-              <span className="text-[8px] text-[var(--eg-text-dim)] ml-auto">
-                {isExpanded ? "▲" : "▼"}
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Expanded sensor detail */}
-        <AnimatePresence>
-          {isExpanded && hasSensors && (
-            <SensorDetailPanel sensors={item.sensors} />
-          )}
-        </AnimatePresence>
+        {/* Persistent sensor values row */}
+        {hasSensors && <SensorValuesRow sensors={item.sensors} />}
       </motion.div>
     );
   }
 
   if (isCompactedBlock(item)) {
     const tierColor = item.tier === 2 ? "#e040fb" : "#b388ff";
+    const hasSensors = item.sensors != null;
+    const scoreDisplay = item.avgAnomalyScore !== undefined 
+      ? `${(item.avgAnomalyScore * 100).toFixed(1)}% (${item.count}pts)`
+      : `AVG (${item.count}pts)`;
+
     return (
       <motion.div
         layout
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, x: 20 }}
-        transition={{ duration: 0.15 }}
-        className="grid grid-cols-[50px_40px_60px_60px_60px] gap-1 px-2 py-1 text-[11px] font-mono border-b border-[var(--eg-border)]/30"
+        transition={{ duration: 0.08 }}
+        className="border-b border-[var(--eg-border)]/30 flex flex-col"
         style={{ backgroundColor: `${tierColor}08` }}
       >
-        <span style={{ color: tierColor }} className="font-bold">[{item.range}]</span>
-        <span style={{ color: tierColor }}>T{item.tier}</span>
-        <span className="text-[var(--eg-text-bright)]">{item.avgValue.toFixed(0)}</span>
-        <span className="text-[var(--eg-text-dim)]">{item.count}pts</span>
-        <span style={{ color: tierColor }} className="font-bold">COMPACT</span>
+        <div
+          className="grid grid-cols-[50px_40px_80px_60px] gap-1 px-2 py-1 pt-1.5 text-[11px] font-mono items-center"
+        >
+          <span style={{ color: tierColor }} className="font-bold">[{item.range}]</span>
+          <span style={{ color: tierColor }}>T{item.sourceTurbine ?? item.tier}</span>
+          <span style={{ color: tierColor }} className="font-bold text-[10px]">{scoreDisplay}</span>
+          <div className="flex items-center gap-1">
+            <span style={{ color: tierColor }} className="font-bold">COMPACT</span>
+          </div>
+        </div>
+        
+        {hasSensors && item.sensors && <SensorValuesRow sensors={item.sensors} />}
       </motion.div>
     );
   }
@@ -210,10 +197,6 @@ export function DataTables() {
   const edgeScrollRef    = useRef<HTMLDivElement>(null);
   const centralScrollRef = useRef<HTMLDivElement>(null);
 
-  // Track which row is expanded (by key string) per table
-  const [edgeExpanded,    setEdgeExpanded]    = useState<string | null>(null);
-  const [centralExpanded, setCentralExpanded] = useState<string | null>(null);
-
   const edgeVisible    = edgeStorage.slice(-MAX_ROWS);
   const centralVisible = centralStorage.slice(-MAX_ROWS);
 
@@ -221,15 +204,12 @@ export function DataTables() {
     if (edgeScrollRef.current) {
       edgeScrollRef.current.scrollTop = edgeScrollRef.current.scrollHeight;
     }
-    // Reset expansion when new data arrives
-    setEdgeExpanded(null);
   }, [edgeStorage.length]);
 
   useEffect(() => {
     if (centralScrollRef.current) {
       centralScrollRef.current.scrollTop = centralScrollRef.current.scrollHeight;
     }
-    setCentralExpanded(null);
   }, [centralStorage.length]);
 
   return (
@@ -246,8 +226,6 @@ export function DataTables() {
             <DataRow
               key={key}
               item={item}
-              isExpanded={edgeExpanded === key}
-              onToggle={() => setEdgeExpanded(edgeExpanded === key ? null : key)}
             />
           );
         })}
@@ -263,8 +241,6 @@ export function DataTables() {
             <DataRow
               key={key}
               item={item}
-              isExpanded={centralExpanded === key}
-              onToggle={() => setCentralExpanded(centralExpanded === key ? null : key)}
             />
           );
         })}

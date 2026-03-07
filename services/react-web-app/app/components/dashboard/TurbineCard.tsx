@@ -99,6 +99,12 @@ export function TurbineCard({
 }) {
   const history              = usePipelineStore((s) => s.perTurbineHistory[turbineId] || []);
   const forcedAnomalyTurbine = usePipelineStore((s) => s.forcedAnomalyTurbine);
+  const enabledTurbines      = usePipelineStore((s) => s.enabledTurbines);
+  const isEnabled            = enabledTurbines.includes(turbineId);
+
+  const setTurbineEnabled = (enabled: boolean) => {
+    edgeguardApi.setTurbineEnabled(turbineId, enabled).catch(() => {});
+  };
 
   const setForcedAnomalyTurbine = (id: number | null) => {
     if (id != null) {
@@ -144,18 +150,33 @@ export function TurbineCard({
       animate={{ opacity: 1, x: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 24, delay }}
       className={`eg-panel p-3 transition-all duration-300 ${
-        isActive ? "glow-red-box border-[var(--eg-anomaly)]/50" : ""
-      }`}
+        !isEnabled ? "opacity-70" : ""
+      } ${isActive ? "glow-red-box border-[var(--eg-anomaly)]/50" : ""}`}
     >
-      {/* Header */}
+      {/* Header: turbine label + power toggle */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <div className={`eg-led ${isAnomaly ? "eg-led-offline" : "eg-led-online"}`} />
-          <span className="font-display text-[11px] tracking-[0.15em] text-[var(--eg-text-bright)] font-bold">
+          <div className={`eg-led ${!isEnabled ? "eg-led-offline" : isAnomaly ? "eg-led-offline" : "eg-led-online"}`} />
+          <span className={`font-display text-[11px] tracking-[0.15em] font-bold ${isEnabled ? "text-[var(--eg-text-bright)]" : "text-[var(--eg-text-dim)]"}`}>
             TURBINE {turbineId}
           </span>
+          {!isEnabled && (
+            <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-[var(--eg-border)] text-[var(--eg-text-dim)]">
+              OFF
+            </span>
+          )}
         </div>
-        <span className="font-mono text-[10px] text-[var(--eg-text-dim)]">T{turbineId}</span>
+        <button
+          type="button"
+          onClick={() => setTurbineEnabled(!isEnabled)}
+          className={`font-mono text-[9px] px-2 py-1 rounded border transition-colors ${
+            isEnabled
+              ? "border-[var(--eg-border)] text-[var(--eg-text-dim)] hover:border-[var(--eg-flow)]/50 hover:text-[var(--eg-flow)]"
+              : "border-[var(--eg-flow)]/50 text-[var(--eg-flow)]"
+          }`}
+        >
+          {isEnabled ? "ON" : "OFF"}
+        </button>
       </div>
 
       {/* Sparkline (power output) */}
@@ -197,7 +218,7 @@ export function TurbineCard({
         <div>
           <span className="text-[var(--eg-text-dim)]">SCORE </span>
           <span className="font-mono font-semibold" style={{ color: scoreColor }}>
-            {lastScore.toFixed(3)}
+            {(lastScore * 100).toFixed(1)}%
           </span>
         </div>
       </div>
@@ -217,11 +238,14 @@ export function TurbineCard({
         />
       </div>
 
-      {/* Inject button */}
+      {/* Inject button — disabled when turbine is off */}
       <button
-        onClick={() => setForcedAnomalyTurbine(isActive ? null : turbineId)}
+        onClick={() => isEnabled && setForcedAnomalyTurbine(isActive ? null : turbineId)}
+        disabled={!isEnabled}
         className={`w-full py-1.5 rounded text-[9px] font-display tracking-[0.15em] font-bold transition-all duration-200 ${
-          isActive
+          !isEnabled
+            ? "bg-[var(--eg-surface)] border border-[var(--eg-border)] text-[var(--eg-text-dim)] cursor-not-allowed opacity-60"
+            : isActive
             ? "bg-[var(--eg-anomaly)]/20 border border-[var(--eg-anomaly)]/50 text-[var(--eg-anomaly)]"
             : "bg-[var(--eg-surface)] border border-[var(--eg-border)] text-[var(--eg-text-dim)] hover:border-[var(--eg-flow)]/50 hover:text-[var(--eg-flow)]"
         }`}

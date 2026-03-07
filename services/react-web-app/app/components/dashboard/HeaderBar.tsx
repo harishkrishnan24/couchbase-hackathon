@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { usePipelineStore, EDGE_CAPACITY } from "~/stores/pipelineStore";
 import { edgeguardApi } from "~/lib/api";
-import { Play, Square } from "lucide-react";
+import { Play, Square, Settings, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 export function HeaderBar() {
   const isOnline = usePipelineStore((s) => s.isOnline);
@@ -13,8 +19,17 @@ export function HeaderBar() {
   const totalAnomalies = usePipelineStore((s) => s.totalAnomalies);
   const edgeStorage = usePipelineStore((s) => s.edgeStorage);
 
+  const setEdgeStorage = usePipelineStore((s) => s.setEdgeStorage);
+  const setCentralStorage = usePipelineStore((s) => s.setCentralStorage);
+
   const startSimulation = () => { edgeguardApi.start().catch(() => {}); };
   const stopSimulation = () => { edgeguardApi.stop().catch(() => {}); };
+
+  const handleClearAllData = () => {
+    setEdgeStorage([]);
+    setCentralStorage([]);
+    edgeguardApi.clearAllStorage().catch(() => {});
+  };
 
   const [clock, setClock] = useState(formatClock());
 
@@ -63,7 +78,10 @@ export function HeaderBar() {
             <Metric label="EDGE UTIL" value={`${utilization}%`} color={parseInt(utilization) > 80 ? "var(--eg-anomaly)" : parseInt(utilization) > 50 ? "var(--eg-alert)" : undefined} />
           </>
         )}
+      </div>
 
+      {/* Right: start/stop + settings + clock */}
+      <div className="flex items-center gap-4">
         {/* START / STOP toggle */}
         {showStartStop && (
           isRunning ? (
@@ -90,11 +108,31 @@ export function HeaderBar() {
             </motion.button>
           )
         )}
-      </div>
 
-      {/* Right: clock */}
-      <div className="font-mono text-[11px] text-[var(--eg-text-dim)] tracking-wider">
-        {clock}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="p-1.5 rounded-md text-[var(--eg-text-dim)] hover:text-[var(--eg-flow)] hover:bg-[var(--eg-surface)]/50 transition-colors"
+              aria-label="Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[10rem] bg-[var(--eg-panel)] border-[var(--eg-border)]">
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={handleClearAllData}
+              className="font-display text-[10px] tracking-[0.1em] cursor-pointer focus:bg-[var(--eg-anomaly)]/10 focus:text-[var(--eg-anomaly)]"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-2" />
+              Clear data
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <span className="font-mono text-[11px] text-[var(--eg-text-dim)] tracking-wider">
+          {clock}
+        </span>
       </div>
     </motion.header>
   );

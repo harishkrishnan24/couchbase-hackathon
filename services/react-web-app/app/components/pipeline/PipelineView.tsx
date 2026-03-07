@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence, animate } from "framer-motion";
 import { usePipelineStore } from "~/stores/pipelineStore";
 import { COMPACTION_THRESHOLD, EDGE_CAPACITY } from "~/stores/pipelineStore";
 import { edgeguardApi } from "~/lib/api";
@@ -23,6 +23,11 @@ const VIEW = { width: 1100, height: 350 };
 /** Progress along "to-buffer" at which the packet passes the Edge AI chip (turns red when anomaly). */
 const BRAIN_PROGRESS = (BRAIN_X - PIPE_START_X) / (BUFFER_X - PIPE_START_X);
 
+/** Degrees per second when spinning (normal). ~2.5s per full revolution. */
+const BLADE_SPIN_SPEED = 360 / 2.5;
+/** Duration of coast-down when turbine is switched off (seconds). */
+const COAST_DURATION = 2.2;
+
 function TurbineGlyph({
   x,
   y,
@@ -30,6 +35,7 @@ function TurbineGlyph({
   active,
   label,
   isRunning,
+  enabled,
   onActivate,
 }: {
   x: number;
@@ -38,15 +44,64 @@ function TurbineGlyph({
   active: boolean;
   label: string;
   isRunning: boolean;
+  enabled: boolean;
   onActivate: () => void;
 }) {
-  const dormant = !isRunning;
+  const dormant = !isRunning || !enabled;
   const bladeColor = dormant
     ? "var(--eg-muted)"
     : active
       ? "var(--eg-anomaly)"
       : "var(--eg-flow)";
   const hubColor = dormant ? "var(--eg-muted)" : active ? "var(--eg-anomaly)" : "var(--eg-flow)";
+
+  const [rotation, setRotation] = useState(0);
+  const [coasting, setCoasting] = useState(false);
+  const prevEnabledRef = useRef(enabled);
+  const rafRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
+
+  const spinning = isRunning && enabled;
+
+  // Spin loop: only when enabled and running
+  useEffect(() => {
+    if (!spinning) return;
+    setCoasting(false);
+    lastTimeRef.current = performance.now();
+    const tick = (now: number) => {
+      const delta = (now - lastTimeRef.current) / 1000;
+      lastTimeRef.current = now;
+      setRotation((r) => (r + BLADE_SPIN_SPEED * delta) % 360);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [spinning]);
+
+  // When switched off after being on: coast down to standstill
+  useEffect(() => {
+    if (enabled) {
+      prevEnabledRef.current = true;
+      return;
+    }
+    if (prevEnabledRef.current && isRunning) {
+      prevEnabledRef.current = false;
+      setCoasting(true);
+      const start = rotation;
+      const controls = animate(start, start + 360, {
+        duration: COAST_DURATION,
+        ease: "easeOut",
+        onUpdate: (v) => setRotation(v),
+        onComplete: () => setCoasting(false),
+      });
+      return () => controls.stop();
+    }
+    prevEnabledRef.current = false;
+  }, [enabled, isRunning]);
+
+  const showBeam = isRunning && enabled;
 
   return (
     <g
@@ -56,11 +111,11 @@ function TurbineGlyph({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          if (isRunning) onActivate();
+          if (isRunning && enabled) onActivate();
         }
       }}
-      style={{ cursor: isRunning ? "pointer" : "default" }}
-      onClick={() => isRunning && onActivate()}
+      style={{ cursor: isRunning && enabled ? "pointer" : "default" }}
+      onClick={() => isRunning && enabled && onActivate()}
     >
       {/* Tower */}
       <line
@@ -95,32 +150,22 @@ function TurbineGlyph({
         fill={hubColor}
         opacity={dormant ? 0.3 : 0.9}
       />
-      {active && isRunning && (
+      {active && isRunning && enabled && (
         <circle cx={x} cy={hubY} r={12} fill="none" stroke="var(--eg-anomaly)" strokeWidth={1} opacity={0.4}>
           <animate attributeName="r" values="8;18;8" dur="1s" repeatCount="indefinite" />
           <animate attributeName="opacity" values="0.5;0;0.5" dur="1s" repeatCount="indefinite" />
         </circle>
       )}
 
-      {/* Blades */}
-      <g>
-        {isRunning ? (
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from={`0 ${x} ${hubY}`}
-            to={`360 ${x} ${hubY}`}
-            dur={active ? "0.8s" : "2.5s"}
-            repeatCount="indefinite"
-          />
-        ) : null}
-        <line x1={x} y1={hubY} x2={x} y2={hubY - 26} stroke={bladeColor} strokeWidth={2.5} strokeLinecap="round" opacity={dormant ? 0.3 : 1} />
-        <line x1={x} y1={hubY} x2={x - 22} y2={hubY + 14} stroke={bladeColor} strokeWidth={2.5} strokeLinecap="round" opacity={dormant ? 0.3 : 1} />
-        <line x1={x} y1={hubY} x2={x + 22} y2={hubY + 14} stroke={bladeColor} strokeWidth={2.5} strokeLinecap="round" opacity={dormant ? 0.3 : 1} />
+      {/* Blades: rotate only when spinning or coasting; when off, show at rest */}
+      <g transform={`rotate(${rotation} ${x} ${hubY})`}>
+        <line x1={x} y1={hubY} x2={x} y2={hubY - 26} stroke={bladeColor} strokeWidth={2.5} strokeLinecap="round" opacity={dormant && !coasting ? 0.3 : 1} />
+        <line x1={x} y1={hubY} x2={x - 22} y2={hubY + 14} stroke={bladeColor} strokeWidth={2.5} strokeLinecap="round" opacity={dormant && !coasting ? 0.3 : 1} />
+        <line x1={x} y1={hubY} x2={x + 22} y2={hubY + 14} stroke={bladeColor} strokeWidth={2.5} strokeLinecap="round" opacity={dormant && !coasting ? 0.3 : 1} />
       </g>
 
-      {/* Data beam from turbine to pipe */}
-      {isRunning && (
+      {/* Data beam from turbine to pipe — only when turbine is on */}
+      {showBeam && (
         <line
           x1={x}
           y1={y + 4}
@@ -487,6 +532,7 @@ export function PipelineView() {
   const isOnline = usePipelineStore((s) => s.isOnline);
   const isRunning = usePipelineStore((s) => s.isRunning);
   const forcedAnomalyTurbine = usePipelineStore((s) => s.forcedAnomalyTurbine);
+  const enabledTurbines = usePipelineStore((s) => s.enabledTurbines);
   const compactionCount = usePipelineStore((s) => s.compactionCount);
   const edgePressure = usePipelineStore((s) => s.edgePressure);
   const setOnline = (online: boolean) => {
@@ -642,7 +688,7 @@ export function PipelineView() {
             const size = showAsAnomaly ? 5 : isCompacted ? 6 : 4;
 
             return (
-              <g key={packet.id} filter={showAsAnomaly ? "url(#glow-red)" : "url(#glow-cyan)"}>
+              <g key={`${packet.segment}-${packet.id}`} filter={showAsAnomaly ? "url(#glow-red)" : "url(#glow-cyan)"}>
                 <circle cx={position.x - 8} cy={position.y} r={size * 0.6} fill={color} opacity={0.15} />
                 <circle cx={position.x - 4} cy={position.y} r={size * 0.8} fill={color} opacity={0.25} />
                 <circle cx={position.x} cy={position.y} r={size} fill={color} opacity={0.9} />
@@ -655,6 +701,7 @@ export function PipelineView() {
           {TURBINE_POSITIONS.map((pos, index) => {
             const turbineId = index + 1;
             const active = forcedAnomalyTurbine === turbineId;
+            const enabled = enabledTurbines.includes(turbineId);
             const hubY = pos.y - 34;
             return (
               <TurbineGlyph
@@ -665,6 +712,7 @@ export function PipelineView() {
                 active={active}
                 label={`T${turbineId}`}
                 isRunning={isRunning}
+                enabled={enabled}
                 onActivate={() => setForcedAnomalyTurbine(active ? null : turbineId)}
               />
             );

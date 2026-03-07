@@ -18,6 +18,7 @@ export interface SystemStatus {
   isInitialized: boolean;
   isOnline: boolean;
   sequenceNumber: number;
+  enabledTurbines: number[];
 }
 
 export interface Metrics {
@@ -52,6 +53,16 @@ export interface CentralUpdatePayload {
 export interface CompactionPayload {
   log: CompactionLogEntry;
   edgeStorage: EdgeGuardItem[];
+  compactionCount: number;
+}
+
+/** Initial state sent when a client connects to the SSE stream (so edge/central data is visible after refresh). */
+export interface SnapshotPayload {
+  edgeStorage: EdgeGuardItem[];
+  centralStorage: EdgeGuardItem[];
+  metrics: Metrics;
+  systemStatus: SystemStatus;
+  compactionLogs: CompactionLogEntry[];
   compactionCount: number;
 }
 
@@ -101,12 +112,16 @@ export const edgeguardApi = {
   stop: () => request<{ ok: boolean }>("POST", "/api/system/stop"),
   setConnection: (online: boolean) =>
     request<{ ok: boolean }>("POST", "/api/connection", { online }),
+  setTurbineEnabled: (turbineId: number, enabled: boolean) =>
+    request<{ ok: boolean }>("PATCH", `/api/turbines/${turbineId}`, { enabled }),
   injectAnomaly: (turbineId: number) =>
     request<{ ok: boolean }>("POST", `/api/turbines/${turbineId}/anomaly`),
   clearAnomaly: (turbineId: number) =>
     request<{ ok: boolean }>("DELETE", `/api/turbines/${turbineId}/anomaly`),
   getEdgeStorage: () => request<EdgeGuardItem[]>("GET", "/api/storage/edge"),
+  clearEdgeStorage: () => request<{ ok: boolean }>("POST", "/api/storage/edge/clear"),
   getCentralStorage: () => request<EdgeGuardItem[]>("GET", "/api/storage/central"),
+  clearAllStorage: () => request<{ ok: boolean }>("POST", "/api/storage/clear"),
   getMetrics: () => request<Metrics>("GET", "/api/metrics"),
   getTurbineHistory: (id: number) =>
     request<DataPoint[]>("GET", `/api/turbines/${id}/history`),

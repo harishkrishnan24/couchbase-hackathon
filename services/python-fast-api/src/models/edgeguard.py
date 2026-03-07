@@ -31,14 +31,22 @@ class DataPoint(BaseModel):
 
 
 class CompactedBlock(BaseModel):
+    """DataPoint-like block: same core fields (id, seq, sourceTurbine, sensors, value, timestamp) plus compacted-only stats."""
     type: Literal["compacted"] = "compacted"
-    avg_value: float = Field(alias="avgValue")
+    id: str = ""  # set by caller (e.g. compact_{ts}_{idx})
+    seq: int  # min seq in window (for ordering); UI may show [range] in seq column
+    source_turbine: int = Field(alias="sourceTurbine")
+    sensors: SensorData  # averaged over window/block
+    value: float  # primary display value (avg power_output), same as DataPoint
+    timestamp: int  # unix ms (e.g. average of window)
+    range: str  # e.g. "1001-1005"
+    tier: Literal[1, 2]
+    count: int
+    avg_value: float = Field(alias="avgValue")  # same as value, for backward compat
     min_value: float = Field(alias="minValue")
     max_value: float = Field(alias="maxValue")
     std_dev: float = Field(alias="stdDev")
-    count: int
-    range: str
-    tier: Literal[1, 2]
+    avg_anomaly_score: float = Field(default=0.0, alias="avgAnomalyScore")
 
     model_config = {"populate_by_name": True}
 
@@ -67,6 +75,7 @@ class SystemStatus(BaseModel):
     is_initialized: bool = Field(alias="isInitialized")
     is_online: bool = Field(alias="isOnline")
     sequence_number: int = Field(alias="sequenceNumber")
+    enabled_turbines: list[int] = Field(default=[], alias="enabledTurbines")
 
     model_config = {"populate_by_name": True}
 

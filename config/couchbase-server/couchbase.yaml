@@ -48,12 +48,8 @@ buckets:
           sessions: {}  # No settings; uses collection_defaults
       edge:
         collections:
-          readings: {}       # Raw multi-feature turbine readings scored by Isolation Forest
-          anomalies: {}      # Readings flagged as anomalies (anomalyScore > 0.7)
-          compacted: {}      # Compacted blocks produced by edge compaction engine
+          data: {}           # All pipeline items (type: normal | anomaly | compacted)
       central:
         collections:
-          readings: {}       # Readings synced from edge via Sync Gateway
-          anomalies: {}      # Anomalies synced from edge via Sync Gateway
-          compacted: {}      # Compacted blocks synced from edge
+          data: {}           # All pipeline items synced from edge via Sync Gateway
           model_state: {}    # Model metadata: version, contamination, threshold, feature names
