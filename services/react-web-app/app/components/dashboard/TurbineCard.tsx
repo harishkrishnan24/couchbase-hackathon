@@ -25,23 +25,23 @@ function SensorBar({
   const fraction = Math.max(0, Math.min(1, (value - min) / span));
 
   return (
-    <div className="flex flex-col gap-[3px]">
+    <div className="flex flex-col gap-[2px]">
       <div className="flex items-center justify-between">
         <span
-          className="text-[10px] font-medium uppercase tracking-wide"
+          className="text-[9px] font-medium uppercase tracking-wide"
           style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}
         >
           {label}
         </span>
         <span
-          className="text-[11px] font-semibold"
+          className="text-[10px] font-semibold"
           style={{ color, fontFamily: "IBM Plex Mono, monospace" }}
         >
           {value % 1 === 0 ? value : value.toFixed(1)}
-          <span className="text-[9px] ml-[2px]" style={{ color: "var(--eg-text-dim)" }}>{unit}</span>
+          <span className="text-[8px] ml-[2px]" style={{ color: "var(--eg-text-dim)" }}>{unit}</span>
         </span>
       </div>
-      <div className="h-[4px] rounded-full overflow-hidden" style={{ backgroundColor: "var(--eg-border)" }}>
+      <div className="h-[3px] rounded-full overflow-hidden" style={{ backgroundColor: "var(--eg-border)" }}>
         <motion.div
           className="h-full rounded-full"
           style={{ backgroundColor: color }}
@@ -67,7 +67,7 @@ const SENSOR_KEYS = [
 
 function SensorGrid({ sensors }: { sensors: SensorData }) {
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-2 mb-2">
+    <div className="grid grid-cols-2 gap-x-3 gap-y-1 mb-1.5">
       {SENSOR_KEYS.map((key) => {
         const meta  = SENSOR_RANGES[key];
         const value = sensors[key];
@@ -149,12 +149,12 @@ export function TurbineCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut", delay }}
-      className={`eg-panel p-4 transition-all duration-300 ${
+      className={`eg-panel flex-1 flex flex-col min-h-0 p-3 transition-all duration-300 ${
         !isEnabled ? "opacity-60" : ""
       } ${isActive ? "border-[var(--eg-anomaly)] bg-red-50/40" : ""}`}
     >
       {/* Header: turbine name + ID + toggle */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div
             className={`eg-led ${
@@ -163,7 +163,7 @@ export function TurbineCard({
             style={!isEnabled ? { backgroundColor: "var(--eg-muted)", boxShadow: "none" } : undefined}
           />
           <span
-            className="text-sm font-bold tracking-wide uppercase"
+            className="text-xs font-bold tracking-wide uppercase"
             style={{ color: "var(--eg-text-bright)", fontFamily: "Outfit, sans-serif" }}
           >
             Turbine {turbineId}
@@ -171,7 +171,7 @@ export function TurbineCard({
         </div>
         <div className="flex items-center gap-2">
           <span
-            className="text-xs font-semibold"
+            className="text-[10px] font-semibold"
             style={{ color: "var(--eg-text-muted)", fontFamily: "IBM Plex Mono, monospace" }}
           >
             T{turbineId}
@@ -179,7 +179,7 @@ export function TurbineCard({
           <button
             type="button"
             onClick={() => setTurbineEnabled(!isEnabled)}
-            className="text-xs px-2 py-0.5 rounded border transition-colors"
+            className="text-[10px] px-1.5 py-0.5 rounded border transition-colors"
             style={{
               borderColor: isEnabled ? "var(--eg-border)" : "var(--eg-flow)",
               color: isEnabled ? "var(--eg-text-dim)" : "var(--eg-flow)",
@@ -193,10 +193,10 @@ export function TurbineCard({
       </div>
 
       {/* Sparkline */}
-      <div className="mb-2 rounded overflow-hidden" style={{ backgroundColor: "#f8fafc" }}>
+      <div className="mb-1.5 rounded overflow-hidden" style={{ backgroundColor: "#f8fafc" }}>
         <svg
           viewBox={`0 0 ${sparkW} ${sparkH}`}
-          className="w-full h-8"
+          className="w-full h-6"
           preserveAspectRatio="none"
         >
           {sparkData.length > 1 && (
@@ -225,18 +225,18 @@ export function TurbineCard({
       </div>
 
       {/* Power + Score row */}
-      <div className="flex items-baseline justify-between mb-3">
+      <div className="flex items-baseline justify-between mb-2">
         <div>
-          <span className="text-xs font-medium uppercase" style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}>Power </span>
-          <span className="text-base font-bold" style={{ color: "var(--eg-text-bright)", fontFamily: "IBM Plex Mono, monospace" }}>
+          <span className="text-[10px] font-medium uppercase" style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}>Power </span>
+          <span className="text-sm font-bold" style={{ color: "var(--eg-text-bright)", fontFamily: "IBM Plex Mono, monospace" }}>
             {lastValue.toFixed(0)}
           </span>
-          <span className="text-xs ml-0.5" style={{ color: "var(--eg-text-dim)" }}>kW</span>
+          <span className="text-[10px] ml-0.5" style={{ color: "var(--eg-text-dim)" }}>kW</span>
         </div>
         <div>
-          <span className="text-xs font-medium uppercase" style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}>Score </span>
-          <span className="text-base font-bold" style={{ color: scoreColor, fontFamily: "IBM Plex Mono, monospace" }}>
-            {lastScore.toFixed(3)}
+          <span className="text-[10px] font-medium uppercase" style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}>Score </span>
+          <span className="text-sm font-bold" style={{ color: scoreColor, fontFamily: "IBM Plex Mono, monospace" }}>
+            {(lastScore * 100).toFixed(2)}%
           </span>
         </div>
       </div>
@@ -246,7 +246,7 @@ export function TurbineCard({
 
       {/* Anomaly score bar */}
       <div
-        className="h-1.5 rounded-full overflow-hidden mb-3"
+        className="h-1 rounded-full overflow-hidden mb-2"
         style={{ backgroundColor: "var(--eg-border)" }}
       >
         <motion.div
@@ -261,7 +261,7 @@ export function TurbineCard({
       <button
         onClick={() => isEnabled && setForcedAnomalyTurbine(isActive ? null : turbineId)}
         disabled={!isEnabled}
-        className="w-full py-2 rounded text-xs font-semibold uppercase tracking-wider transition-all duration-200"
+        className="w-full py-1.5 rounded text-[10px] font-semibold uppercase tracking-wider transition-all duration-200"
         style={{
           fontFamily: "Outfit, sans-serif",
           letterSpacing: "0.08em",

@@ -139,7 +139,7 @@ export default function Demo() {
   const showTour = isInitialized && !introComplete;
 
   return (
-    <div className="vattenfall-demo min-h-screen demo-bg text-[var(--eg-text)]">
+    <div className="vattenfall-demo h-screen overflow-hidden demo-bg text-[var(--eg-text)]">
       <AnimatePresence>
         {showBoot && <BootOverlay />}
       </AnimatePresence>
@@ -148,26 +148,29 @@ export default function Demo() {
         {showTour && <IntroTour />}
       </AnimatePresence>
 
-      {/* Main layout: vertical stacking */}
-      <div className="relative z-10 flex flex-col min-h-screen">
+      {/* Main layout: fixed viewport, no scroll */}
+      <div className="relative z-10 flex flex-col h-screen">
         <HeaderBar />
 
-        <div className="flex-1 p-4 space-y-4 pb-8">
-          {/* Turbine cards row */}
-          <div className="grid grid-cols-3 gap-4">
+        {/* 3-column grid filling remaining height */}
+        <div className="flex-1 grid grid-cols-[260px_1fr_320px] gap-2 p-2 min-h-0 overflow-hidden">
+          {/* Col 1: Turbine cards stacked */}
+          <div className="flex flex-col gap-2 min-h-0 overflow-hidden">
             <TurbineCard turbineId={1} delay={0.05} />
             <TurbineCard turbineId={2} delay={0.1} />
             <TurbineCard turbineId={3} delay={0.15} />
           </div>
 
-          {/* Data pipeline — full width */}
-          <PipelineView />
+          {/* Col 2: Pipeline + Data tables */}
+          <div className="flex flex-col gap-2 min-h-0 overflow-hidden">
+            <PipelineView />
+            <DataTables />
+          </div>
 
-          {/* Storage panels — 2-column */}
-          <StoragePanel delay={0.1} />
-
-          {/* Data tables — 2-column */}
-          <DataTables />
+          {/* Col 3: Storage panels (Edge + Central capacity) */}
+          <div className="flex flex-col gap-2 min-h-0 overflow-hidden">
+            <StoragePanel delay={0.1} />
+          </div>
         </div>
       </div>
     </div>

@@ -183,7 +183,7 @@ function DataRow({
               fontFamily: "IBM Plex Mono, monospace",
             }}
           >
-            {item.anomalyScore.toFixed(3)}
+            {(item.anomalyScore * 100).toFixed(2)}%
           </span>
           <span
             className="text-[10px] font-semibold uppercase"
@@ -205,7 +205,7 @@ function DataRow({
     const tierColor = item.tier === 2 ? "#9333ea" : "#7c3aed";
     const hasSensors = item.sensors != null;
     const scoreDisplay = item.avgAnomalyScore !== undefined
-      ? `${item.avgAnomalyScore.toFixed(3)} (${item.count}pts)`
+      ? `${(item.avgAnomalyScore * 100).toFixed(2)}% (${item.count}pts)`
       : `avg (${item.count}pts)`;
 
     return (
@@ -271,7 +271,7 @@ export function DataTables() {
 
   return (
     <motion.div
-      className="grid grid-cols-2 gap-3 h-full min-h-0"
+      className="grid grid-cols-2 gap-2 flex-1 min-h-0"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.4 }}

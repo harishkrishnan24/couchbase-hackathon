@@ -55,7 +55,7 @@ export function StoragePanel({ delay }: { delay: number }) {
     border: "1px solid var(--eg-border)",
     borderRadius: 8,
     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-    padding: "16px",
+    padding: "12px",
   };
 
   const labelStyle: React.CSSProperties = {
@@ -79,14 +79,14 @@ export function StoragePanel({ delay }: { delay: number }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut", delay }}
-      className="grid grid-cols-2 gap-4"
+      className="flex flex-col gap-2 h-full min-h-0"
     >
       {/* ── Edge Capacity ── */}
-      <div style={panelStyle}>
-        <div className="flex items-center gap-2 mb-4">
+      <div style={panelStyle} className="flex-1 min-h-0 overflow-auto">
+        <div className="flex items-center gap-2 mb-2">
           <DbIcon color="var(--eg-flow)" />
           <span
-            className="text-sm font-semibold uppercase tracking-wide"
+            className="text-xs font-semibold uppercase tracking-wide"
             style={{ color: "var(--eg-text-bright)", fontFamily: "Outfit, sans-serif" }}
           >
             Edge Capacity
@@ -100,7 +100,7 @@ export function StoragePanel({ delay }: { delay: number }) {
             {edgeStorage.length}/{EDGE_CAPACITY}
           </span>
         </div>
-        <div className="h-2 rounded-full overflow-hidden mb-4" style={{ backgroundColor: "var(--eg-border)" }}>
+        <div className="h-1.5 rounded-full overflow-hidden mb-2" style={{ backgroundColor: "var(--eg-border)" }}>
           <motion.div
             className="h-full rounded-full"
             animate={{ width: `${edgeRatio * 100}%`, backgroundColor: edgeBarColor }}
@@ -109,7 +109,7 @@ export function StoragePanel({ delay }: { delay: number }) {
         </div>
 
         {/* Breakdown */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-1.5 mb-2">
           {[
             { label: "Normal", value: normalCount, color: "var(--eg-ok)" },
             { label: "Anomaly", value: anomalyCount, color: "var(--eg-anomaly)" },
@@ -117,13 +117,13 @@ export function StoragePanel({ delay }: { delay: number }) {
           ].map(({ label, value, color }) => (
             <div
               key={label}
-              className="flex flex-col items-center py-2 rounded-md"
+              className="flex flex-col items-center py-1.5 rounded-md"
               style={{ backgroundColor: "var(--eg-bg)" }}
             >
               <span className="text-sm font-bold" style={{ color, fontFamily: "IBM Plex Mono, monospace" }}>
                 {value}
               </span>
-              <span className="text-[10px] mt-0.5" style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}>
+              <span className="text-[9px] mt-0.5" style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}>
                 {label}
               </span>
             </div>
@@ -131,7 +131,7 @@ export function StoragePanel({ delay }: { delay: number }) {
         </div>
 
         {/* Compaction count */}
-        <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: "var(--eg-border)" }}>
+        <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: "var(--eg-border)" }}>
           <span style={labelStyle}>Compactions</span>
           <span className="text-sm font-semibold" style={{ color: "var(--eg-alert)", fontFamily: "IBM Plex Mono, monospace" }}>
             {compactionCount}
@@ -140,7 +140,7 @@ export function StoragePanel({ delay }: { delay: number }) {
       </div>
 
       {/* ── Central Capacity ── */}
-      <div style={{ ...panelStyle, position: "relative", overflow: "hidden" }}>
+      <div style={{ ...panelStyle, position: "relative", overflow: "hidden" }} className="flex-1 min-h-0">
         {syncPulse && (
           <motion.div
             className="absolute inset-0 pointer-events-none z-10 border-2 rounded-[inherit]"
@@ -151,10 +151,10 @@ export function StoragePanel({ delay }: { delay: number }) {
           />
         )}
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-2">
           <DbIcon color={isOnline ? "var(--eg-flow)" : "var(--eg-muted)"} />
           <span
-            className="text-sm font-semibold uppercase tracking-wide"
+            className="text-xs font-semibold uppercase tracking-wide"
             style={{ color: "var(--eg-text-bright)", fontFamily: "Outfit, sans-serif" }}
           >
             Central Capacity
@@ -162,21 +162,21 @@ export function StoragePanel({ delay }: { delay: number }) {
         </div>
 
         {/* Synced items */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <span style={labelStyle}>Synced items</span>
-          <span className="text-2xl font-bold" style={{ color: "var(--eg-text-bright)", fontFamily: "IBM Plex Mono, monospace" }}>
+          <span className="text-xl font-bold" style={{ color: "var(--eg-text-bright)", fontFamily: "IBM Plex Mono, monospace" }}>
             {centralStorage.length}
-            <span className="text-sm font-normal ml-1 text-[var(--eg-text-dim)]">/100</span>
+            <span className="text-xs font-normal ml-1 text-[var(--eg-text-dim)]">/100</span>
           </span>
         </div>
 
         {/* Status */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <span style={labelStyle}>Status</span>
           <div className="flex items-center gap-1.5">
             <div className={`eg-led ${isOnline ? "eg-led-online" : "eg-led-offline"}`} />
             <span
-              className="text-sm font-semibold"
+              className="text-xs font-semibold"
               style={{
                 color: isOnline ? "var(--eg-ok)" : "var(--eg-anomaly)",
                 fontFamily: "Outfit, sans-serif",
@@ -191,7 +191,7 @@ export function StoragePanel({ delay }: { delay: number }) {
         {lastSyncAgo !== null && (
           <div className="flex items-center justify-between">
             <span style={labelStyle}>Last sync</span>
-            <span style={{ ...valueStyle, fontSize: 12 }}>{lastSyncAgo}s ago</span>
+            <span style={{ ...valueStyle, fontSize: 11 }}>{lastSyncAgo}s ago</span>
           </div>
         )}
       </div>

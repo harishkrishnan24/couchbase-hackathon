@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { usePipelineStore, EDGE_CAPACITY } from "~/stores/pipelineStore";
 import { edgeguardApi } from "~/lib/api";
-import { Play, Square, Wifi, WifiOff, Network, Trash2 } from "lucide-react";
+import { Play, Square, Wifi, WifiOff, Trash2 } from "lucide-react";
 
 // ─── Vattenfall logo mark ────────────────────────────────────────────────────
 
@@ -82,15 +82,12 @@ function ControlBar() {
 
   const showControls = isInitialized && introComplete;
 
-  const btnBase = "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all border";
+  const btnBase = "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all border";
   const btnPrimary = `${btnBase} text-white border-transparent`;
   const btnOutline = `${btnBase} bg-white border-[#e2e8f0] text-[#334155] hover:border-[#0087cd] hover:text-[#0087cd]`;
 
   return (
-    <div
-      className="flex items-center justify-between px-5 py-2 border-b"
-      style={{ borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}
-    >
+    <>
       {/* Action buttons */}
       <div className="flex items-center gap-2">
         {showControls && (
@@ -100,7 +97,7 @@ function ControlBar() {
               className={`${btnPrimary} bg-[#ef4444] hover:bg-[#dc2626]`}
               style={{ fontFamily: "Outfit, sans-serif" }}
             >
-              <Square className="w-3.5 h-3.5" />
+              <Square className="w-3 h-3" />
               Stop System
             </button>
           ) : (
@@ -109,7 +106,7 @@ function ControlBar() {
               className={`${btnPrimary} bg-[#0087cd] hover:bg-[#005f8e]`}
               style={{ fontFamily: "Outfit, sans-serif" }}
             >
-              <Play className="w-3.5 h-3.5" />
+              <Play className="w-3 h-3" />
               Start System
             </button>
           )
@@ -121,18 +118,9 @@ function ControlBar() {
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
           {isOnline
-            ? <><WifiOff className="w-3.5 h-3.5" /> Disconnect Link</>
-            : <><Wifi className="w-3.5 h-3.5" /> Restore Link</>
+            ? <><WifiOff className="w-3 h-3" /> Disconnect Link</>
+            : <><Wifi className="w-3 h-3" /> Restore Link</>
           }
-        </button>
-
-        <button
-          className={btnOutline}
-          style={{ fontFamily: "Outfit, sans-serif" }}
-          disabled
-        >
-          <Network className="w-3.5 h-3.5" />
-          Open Mesh Gateway
         </button>
 
         <button
@@ -140,7 +128,7 @@ function ControlBar() {
           className={`${btnOutline} hover:border-[#ef4444] hover:text-[#ef4444]`}
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-3 h-3" />
           Clear Database
         </button>
       </div>
@@ -148,13 +136,12 @@ function ControlBar() {
       {/* Status tags */}
       <div className="flex items-center gap-2">
         {[
-          { label: "System", value: isRunning ? "Running" : "Idle" },
           { label: "Edge capacity", value: EDGE_CAPACITY.toString() },
           { label: "Edge buffer", value: edgeStorage.length.toString() },
         ].map(({ label, value }) => (
           <span
             key={label}
-            className="px-3 py-1 rounded-full text-xs font-medium border"
+            className="px-2.5 py-1 rounded-full text-xs font-medium border"
             style={{
               borderColor: "#e2e8f0",
               backgroundColor: "#ffffff",
@@ -166,49 +153,37 @@ function ControlBar() {
           </span>
         ))}
       </div>
-    </div>
+    </>
   );
 }
 
 // ─── HeaderBar ────────────────────────────────────────────────────────────────
 
 export function HeaderBar() {
-  const isOnline     = usePipelineStore((s) => s.isOnline);
-  const isRunning    = usePipelineStore((s) => s.isRunning);
-  const totalAnomalies = usePipelineStore((s) => s.totalAnomalies);
-  const totalPackets   = usePipelineStore((s) => s.totalPacketsEmitted);
-
-  const systemStatus = !isRunning ? "Standby" : "Running";
-  const connStatus   = isOnline ? "Online" : "Offline";
-  const anomalyStr   = `${totalAnomalies}/${totalPackets}`;
+  const isOnline = usePipelineStore((s) => s.isOnline);
+  const connStatus = isOnline ? "Online" : "Offline";
 
   return (
-    <motion.div
+    <motion.header
+      className="flex items-center justify-between px-4 py-2 border-b shrink-0"
+      style={{ borderColor: "#e2e8f0", backgroundColor: "#ffffff" }}
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      {/* Top bar: logo + status pills */}
-      <header
-        className="flex items-center justify-between px-5 py-3 border-b"
-        style={{ borderColor: "#e2e8f0", backgroundColor: "#ffffff" }}
-      >
-        <VattenfallLogo />
+      <VattenfallLogo />
 
-        <div className="flex items-center gap-3">
-          <StatusPill label="System" value={systemStatus} variant={isRunning ? "online" : "default"} />
-          <StatusPill
-            label="Connection"
-            value={connStatus}
-            variant={isOnline ? "online" : "offline"}
-          />
-          <StatusPill label="Anomalies" value={anomalyStr} variant={totalAnomalies > 0 ? "warning" : "default"} />
-        </div>
-      </header>
+      <div className="flex items-center gap-2">
+        <ControlBar />
+      </div>
 
-      {/* Control bar */}
-      <ControlBar />
-    </motion.div>
+      {/* Connection pill only */}
+      <StatusPill
+        label="Connection"
+        value={connStatus}
+        variant={isOnline ? "online" : "offline"}
+      />
+    </motion.header>
   );
 }
 

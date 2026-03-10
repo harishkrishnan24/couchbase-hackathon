@@ -565,7 +565,7 @@ export function PipelineView() {
   }, [packetsInTransit]);
 
   return (
-    <div className="w-full">
+    <div className="w-full shrink-0">
       <div className="relative rounded-xl border border-[var(--eg-border)] bg-[var(--eg-surface)] overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
         {/* Status banner */}
         <AnimatePresence>
@@ -586,7 +586,6 @@ export function PipelineView() {
         <svg
           viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
           className="w-full h-auto block"
-          style={{ minHeight: "240px" }}
           aria-hidden
         >
           <defs>
