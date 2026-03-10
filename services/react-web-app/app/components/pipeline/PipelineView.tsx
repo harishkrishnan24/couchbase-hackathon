@@ -186,7 +186,7 @@ function TurbineGlyph({
         fill={dormant ? "var(--eg-muted)" : active ? "var(--eg-anomaly)" : "var(--eg-text-dim)"}
         fontSize="10"
         fontWeight="700"
-        fontFamily="Orbitron, sans-serif"
+        fontFamily="Outfit, sans-serif"
         opacity={dormant ? 0.4 : 1}
       >
         {label}
@@ -258,10 +258,10 @@ function AIChipNode({ x, y, isActive, isRunning }: { x: number; y: number; isAct
       </g>
 
       {/* Labels */}
-      <text x={0} y={s + 16} textAnchor="middle" fill={dormant ? "var(--eg-muted)" : "var(--eg-text-dim)"} fontSize="8" fontWeight="600" fontFamily="Orbitron, sans-serif" letterSpacing="0.1em">
+      <text x={0} y={s + 16} textAnchor="middle" fill={dormant ? "var(--eg-muted)" : "var(--eg-text-dim)"} fontSize="8" fontWeight="600" fontFamily="Outfit, sans-serif" letterSpacing="0.1em">
         EDGE AI
       </text>
-      <text x={0} y={s + 26} textAnchor="middle" fill={color} fontSize="7" fontWeight="500" fontFamily="Orbitron, sans-serif" opacity={0.6} letterSpacing="0.05em">
+      <text x={0} y={s + 26} textAnchor="middle" fill={color} fontSize="7" fontWeight="500" fontFamily="Outfit, sans-serif" opacity={0.6} letterSpacing="0.05em">
         ISOLATION FOREST
       </text>
     </g>
@@ -318,7 +318,7 @@ function BufferTank({ x, y, ratio, inCompactionZone, compactionFlash, isRunning 
             y={tankH / 2 - 4 - mark * (tankH - 8) + 3}
             fill="var(--eg-muted)"
             fontSize="6"
-            fontFamily="JetBrains Mono, monospace"
+            fontFamily="IBM Plex Mono, monospace"
           >
             {Math.round(mark * 100)}%
           </text>
@@ -383,10 +383,10 @@ function BufferTank({ x, y, ratio, inCompactionZone, compactionFlash, isRunning 
       </g>
 
       {/* Labels */}
-      <text x={0} y={tankH / 2 + 16} textAnchor="middle" fill={dormant ? "var(--eg-muted)" : inCompactionZone ? "var(--eg-anomaly)" : "var(--eg-text-dim)"} fontSize="8" fontWeight="600" fontFamily="Orbitron, sans-serif" letterSpacing="0.1em">
+      <text x={0} y={tankH / 2 + 16} textAnchor="middle" fill={dormant ? "var(--eg-muted)" : inCompactionZone ? "var(--eg-anomaly)" : "var(--eg-text-dim)"} fontSize="8" fontWeight="600" fontFamily="Outfit, sans-serif" letterSpacing="0.1em">
         EDGE COUCHBASE
       </text>
-      <text x={0} y={tankH / 2 + 28} textAnchor="middle" fill={dormant ? "var(--eg-muted)" : inCompactionZone ? "var(--eg-anomaly)" : "var(--eg-flow)"} fontSize="9" fontWeight="700" fontFamily="JetBrains Mono, monospace">
+      <text x={0} y={tankH / 2 + 28} textAnchor="middle" fill={dormant ? "var(--eg-muted)" : inCompactionZone ? "var(--eg-anomaly)" : "var(--eg-flow)"} fontSize="9" fontWeight="700" fontFamily="IBM Plex Mono, monospace">
         {Math.round(ratio * 100)}%
       </text>
     </g>
@@ -470,7 +470,7 @@ function ValveNode({ x, y, isOnline, isRunning, onToggle }: {
       )}
 
       {/* Label */}
-      <text x={0} y={40} textAnchor="middle" fill={color} fontSize="8" fontWeight="700" fontFamily="Orbitron, sans-serif" letterSpacing="0.1em">
+      <text x={0} y={40} textAnchor="middle" fill={color} fontSize="8" fontWeight="700" fontFamily="Outfit, sans-serif" letterSpacing="0.1em">
         {dormant ? "STANDBY" : isOnline ? "VALVE OPEN" : "VALVE SHUT"}
       </text>
     </g>
@@ -501,7 +501,7 @@ function CentralDBNode({ x, y, count, isOnline, isRunning }: {
       <line x1={-20} y1={16} x2={20} y2={16} stroke={color} opacity={0.4} strokeWidth={0.6} />
 
       {/* Count */}
-      <text x={0} y={2} textAnchor="middle" fill={color} fontSize="14" fontWeight="700" fontFamily="JetBrains Mono, monospace">
+      <text x={0} y={2} textAnchor="middle" fill={color} fontSize="14" fontWeight="700" fontFamily="IBM Plex Mono, monospace">
         {count}
       </text>
 
@@ -513,11 +513,11 @@ function CentralDBNode({ x, y, count, isOnline, isRunning }: {
       )}
 
       {/* Labels */}
-      <text x={0} y={48} textAnchor="middle" fill={dormant ? "var(--eg-muted)" : isOnline ? "var(--eg-text-dim)" : "var(--eg-muted)"} fontSize="8" fontWeight="600" fontFamily="Orbitron, sans-serif" letterSpacing="0.1em">
+      <text x={0} y={48} textAnchor="middle" fill={dormant ? "var(--eg-muted)" : isOnline ? "var(--eg-text-dim)" : "var(--eg-muted)"} fontSize="8" fontWeight="600" fontFamily="Outfit, sans-serif" letterSpacing="0.1em">
         CENTRAL DB
       </text>
       {!isOnline && isRunning && (
-        <text x={0} y={60} textAnchor="middle" fill="var(--eg-anomaly)" fontSize="7" fontWeight="700" fontFamily="Orbitron, sans-serif" opacity={0.8}>
+        <text x={0} y={60} textAnchor="middle" fill="var(--eg-anomaly)" fontSize="7" fontWeight="700" fontFamily="Outfit, sans-serif" opacity={0.8}>
           UNREACHABLE
         </text>
       )}
@@ -566,7 +566,7 @@ export function PipelineView() {
 
   return (
     <div className="w-full">
-      <div className="relative rounded-xl border border-[var(--eg-border)] bg-[var(--eg-panel)] overflow-hidden shadow-[0_8px_60px_rgba(0,0,0,0.6)]">
+      <div className="relative rounded-xl border border-[var(--eg-border)] bg-[var(--eg-surface)] overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
         {/* Status banner */}
         <AnimatePresence>
           {!isOnline && isRunning && (
@@ -574,9 +574,9 @@ export function PipelineView() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="bg-[var(--eg-anomaly)]/15 border-b border-[var(--eg-anomaly)]/30 px-4 py-1.5 text-center"
+              className="bg-red-50 border-b border-red-200 px-4 py-1.5 text-center"
             >
-              <span className="font-display text-[10px] tracking-[0.3em] text-[var(--eg-anomaly)] font-bold">
+              <span className="text-xs font-semibold tracking-wide text-red-600" style={{ fontFamily: "Outfit, sans-serif" }}>
                 NETWORK DISCONNECTED — EDGE ISOLATION MODE
               </span>
             </motion.div>
@@ -606,14 +606,14 @@ export function PipelineView() {
             </linearGradient>
 
             <filter id="glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
             <filter id="glow-red" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -659,10 +659,10 @@ export function PipelineView() {
           {/* Section labels */}
           {isRunning && (
             <>
-              <text x={PIPE_START_X + 15} y={PIPE_Y - 18} fill="var(--eg-text-dim)" fontSize="7" fontFamily="Orbitron, sans-serif" letterSpacing="0.15em" opacity={0.5}>
+              <text x={PIPE_START_X + 15} y={PIPE_Y - 18} fill="var(--eg-text-dim)" fontSize="7" fontFamily="Outfit, sans-serif" letterSpacing="0.15em" opacity={0.5}>
                 INGEST
               </text>
-              <text x={VALVE_X + 40} y={PIPE_Y - 18} fill="var(--eg-text-dim)" fontSize="7" fontFamily="Orbitron, sans-serif" letterSpacing="0.15em" opacity={isOnline ? 0.5 : 0.2}>
+              <text x={VALVE_X + 40} y={PIPE_Y - 18} fill="var(--eg-text-dim)" fontSize="7" fontFamily="Outfit, sans-serif" letterSpacing="0.15em" opacity={isOnline ? 0.5 : 0.2}>
                 CLOUD SYNC
               </text>
             </>

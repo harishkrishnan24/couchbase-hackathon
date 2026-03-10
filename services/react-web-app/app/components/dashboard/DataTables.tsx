@@ -22,17 +22,23 @@ function SensorValuesRow({ sensors }: { sensors: NonNullable<import("~/types/edg
   };
 
   return (
-    <div className="flex flex-row items-center justify-between px-2 pb-1.5 pt-0.5 gap-2 overflow-hidden">
+    <div className="flex flex-row items-center justify-between px-3 pb-2 pt-0.5 gap-2 overflow-hidden border-t" style={{ borderColor: "var(--eg-border)" }}>
       {keys.map((key) => {
         const value = sensors[key];
         const color = sensorColor(key, value);
 
         return (
           <div key={key} className="flex items-center gap-1 min-w-0">
-            <span className="font-display text-[7px] tracking-wider text-[var(--eg-text-dim)] shrink-0">
+            <span
+              className="text-[9px] font-medium shrink-0"
+              style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}
+            >
               {abbreviations[key]}:
             </span>
-            <span className="font-mono text-[8px] font-semibold truncate" style={{ color }}>
+            <span
+              className="text-[10px] font-semibold truncate"
+              style={{ color, fontFamily: "IBM Plex Mono, monospace" }}
+            >
               {value % 1 === 0 ? value : value.toFixed(1)}
             </span>
           </div>
@@ -68,27 +74,55 @@ function TableShell({
   scrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
-    <div className="eg-panel p-3 flex-1 min-w-0 min-h-0 flex flex-col">
-      <div className="flex items-center justify-between mb-2 shrink-0">
+    <div
+      className="flex-1 min-w-0 flex flex-col overflow-hidden"
+      style={{
+        backgroundColor: "var(--eg-surface)",
+        border: "1px solid var(--eg-border)",
+        borderRadius: 8,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-4 py-3 shrink-0 border-b"
+        style={{ borderColor: "var(--eg-border)" }}
+      >
         <div className="flex items-center gap-2">
-          <svg width="12" height="12" viewBox="0 0 14 14">
-            <ellipse cx="7" cy="3" rx="6" ry="2" fill="none" stroke="var(--eg-flow)" strokeWidth="1" />
-            <rect x="1" y="3" width="12" height="8" fill="none" stroke="var(--eg-flow)" strokeWidth="1" />
-            <ellipse cx="7" cy="11" rx="6" ry="2" fill="none" stroke="var(--eg-flow)" strokeWidth="1" />
+          <svg width="13" height="13" viewBox="0 0 14 14">
+            <ellipse cx="7" cy="3" rx="6" ry="2" fill="none" stroke="var(--eg-flow)" strokeWidth="1.2" />
+            <rect x="1" y="3" width="12" height="8" fill="none" stroke="var(--eg-flow)" strokeWidth="1.2" />
+            <ellipse cx="7" cy="11" rx="6" ry="2" fill="none" stroke="var(--eg-flow)" strokeWidth="1.2" />
           </svg>
-          <span className="font-display text-[10px] tracking-[0.15em] text-[var(--eg-text-bright)] font-bold">
+          <span
+            className="text-sm font-semibold uppercase tracking-wide"
+            style={{ color: "var(--eg-text-bright)", fontFamily: "Outfit, sans-serif" }}
+          >
             {title}
           </span>
         </div>
-        <span className="font-mono text-[9px] text-[var(--eg-text-dim)]">{count} items</span>
+        <span
+          className="text-xs"
+          style={{ color: "var(--eg-text-dim)", fontFamily: "IBM Plex Mono, monospace" }}
+        >
+          {count} items
+        </span>
       </div>
 
-      {/* Table header */}
-      <div className="grid grid-cols-[50px_40px_80px_60px] gap-1 px-2 py-1 text-[8px] font-display tracking-[0.1em] text-[var(--eg-text-dim)] border-b border-[var(--eg-border)] shrink-0">
-        <span>SEQ</span>
-        <span>SRC</span>
-        <span>SCORE</span>
-        <span>TYPE</span>
+      {/* Column headers */}
+      <div
+        className="grid grid-cols-[60px_44px_1fr_80px] gap-1 px-4 py-2 shrink-0 border-b"
+        style={{ borderColor: "var(--eg-border)", backgroundColor: "var(--eg-bg)" }}
+      >
+        {["SEQ", "SRC", "VALUE / SCORE", "TYPE"].map((h) => (
+          <span
+            key={h}
+            className="text-[10px] font-semibold uppercase"
+            style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif", letterSpacing: "0.05em" }}
+          >
+            {h}
+          </span>
+        ))}
       </div>
 
       {/* Rows */}
@@ -119,65 +153,88 @@ function DataRow({
     return (
       <motion.div
         layout
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 20 }}
-        transition={{ duration: 0.08 }}
-        className={`border-b border-[var(--eg-border)]/30 flex flex-col ${isAnomaly ? "bg-[var(--eg-anomaly)]/5" : ""}`}
+        initial={{ opacity: 0, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.1 }}
+        className="flex flex-col border-b"
+        style={{
+          borderColor: "var(--eg-border)",
+          backgroundColor: isAnomaly ? "rgba(239,68,68,0.03)" : "transparent",
+        }}
       >
-        {/* Main data row */}
-        <div
-          className="grid grid-cols-[50px_40px_80px_60px] gap-1 px-2 py-1 pt-1.5 text-[11px] font-mono items-center"
-        >
-          <span className="text-[var(--eg-text-dim)]">#{item.seq}</span>
-          <span className="text-[var(--eg-text-dim)]">T{item.sourceTurbine}</span>
+        <div className="grid grid-cols-[60px_44px_1fr_80px] gap-1 px-4 py-2 items-center">
           <span
-            style={{ color: isAnomaly ? "var(--eg-anomaly)" : "var(--eg-ok)" }}
-            className="font-bold"
+            className="text-[11px]"
+            style={{ color: "var(--eg-text-dim)", fontFamily: "IBM Plex Mono, monospace" }}
           >
-            {(item.anomalyScore * 100).toFixed(1)}%
+            #{item.seq}
           </span>
-          <div className="flex items-center gap-1">
-            <span className={`font-bold ${isAnomaly ? "text-[var(--eg-anomaly)]" : "text-[var(--eg-ok)]"}`}>
-              {isAnomaly ? "ANOMALY" : "NORMAL"}
-            </span>
-          </div>
+          <span
+            className="text-[11px]"
+            style={{ color: "var(--eg-text-dim)", fontFamily: "IBM Plex Mono, monospace" }}
+          >
+            T{item.sourceTurbine}
+          </span>
+          <span
+            className="text-[11px] font-semibold"
+            style={{
+              color: isAnomaly ? "var(--eg-anomaly)" : "var(--eg-flow)",
+              fontFamily: "IBM Plex Mono, monospace",
+            }}
+          >
+            {item.anomalyScore.toFixed(3)}
+          </span>
+          <span
+            className="text-[10px] font-semibold uppercase"
+            style={{
+              color: isAnomaly ? "var(--eg-anomaly)" : "var(--eg-ok)",
+              fontFamily: "Outfit, sans-serif",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {isAnomaly ? "Anomaly" : "Normal"}
+          </span>
         </div>
-
-        {/* Persistent sensor values row */}
         {hasSensors && <SensorValuesRow sensors={item.sensors} />}
       </motion.div>
     );
   }
 
   if (isCompactedBlock(item)) {
-    const tierColor = item.tier === 2 ? "#e040fb" : "#b388ff";
+    const tierColor = item.tier === 2 ? "#9333ea" : "#7c3aed";
     const hasSensors = item.sensors != null;
-    const scoreDisplay = item.avgAnomalyScore !== undefined 
-      ? `${(item.avgAnomalyScore * 100).toFixed(1)}% (${item.count}pts)`
-      : `AVG (${item.count}pts)`;
+    const scoreDisplay = item.avgAnomalyScore !== undefined
+      ? `${item.avgAnomalyScore.toFixed(3)} (${item.count}pts)`
+      : `avg (${item.count}pts)`;
 
     return (
       <motion.div
         layout
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, x: 20 }}
-        transition={{ duration: 0.08 }}
-        className="border-b border-[var(--eg-border)]/30 flex flex-col"
-        style={{ backgroundColor: `${tierColor}08` }}
+        initial={{ opacity: 0, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.1 }}
+        className="flex flex-col border-b"
+        style={{ borderColor: "var(--eg-border)", backgroundColor: `${tierColor}08` }}
       >
-        <div
-          className="grid grid-cols-[50px_40px_80px_60px] gap-1 px-2 py-1 pt-1.5 text-[11px] font-mono items-center"
-        >
-          <span style={{ color: tierColor }} className="font-bold">[{item.range}]</span>
-          <span style={{ color: tierColor }}>T{item.sourceTurbine ?? item.tier}</span>
-          <span style={{ color: tierColor }} className="font-bold text-[10px]">{scoreDisplay}</span>
-          <div className="flex items-center gap-1">
-            <span style={{ color: tierColor }} className="font-bold">COMPACT</span>
-          </div>
+        <div className="grid grid-cols-[60px_44px_1fr_80px] gap-1 px-4 py-2 items-center">
+          <span className="text-[11px] font-semibold" style={{ color: tierColor, fontFamily: "IBM Plex Mono, monospace" }}>
+            [{item.range}]
+          </span>
+          <span className="text-[11px]" style={{ color: tierColor, fontFamily: "IBM Plex Mono, monospace" }}>
+            T{item.sourceTurbine ?? item.tier}
+          </span>
+          <span className="text-[11px] font-semibold" style={{ color: tierColor, fontFamily: "IBM Plex Mono, monospace" }}>
+            {scoreDisplay}
+          </span>
+          <span
+            className="text-[10px] font-semibold uppercase"
+            style={{ color: tierColor, fontFamily: "Outfit, sans-serif", letterSpacing: "0.04em" }}
+          >
+            Compact
+          </span>
         </div>
-        
         {hasSensors && item.sensors && <SensorValuesRow sensors={item.sensors} />}
       </motion.div>
     );
@@ -230,7 +287,12 @@ export function DataTables() {
           );
         })}
         {edgeStorage.length === 0 && (
-          <div className="text-[10px] text-[var(--eg-muted)] text-center py-4 font-mono">NO DATA</div>
+          <div
+            className="text-xs text-center py-6"
+            style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}
+          >
+            No data yet
+          </div>
         )}
       </TableShell>
 
@@ -245,7 +307,12 @@ export function DataTables() {
           );
         })}
         {centralStorage.length === 0 && (
-          <div className="text-[10px] text-[var(--eg-muted)] text-center py-4 font-mono">NO DATA</div>
+          <div
+            className="text-xs text-center py-6"
+            style={{ color: "var(--eg-text-dim)", fontFamily: "Outfit, sans-serif" }}
+          >
+            No data yet
+          </div>
         )}
       </TableShell>
     </motion.div>

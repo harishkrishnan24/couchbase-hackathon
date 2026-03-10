@@ -96,11 +96,20 @@ export function IntroTour() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Dimmed backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      {/* Light-wash backdrop */}
+      <div className="absolute inset-0 backdrop-blur-sm" style={{ backgroundColor: "rgba(15,23,42,0.35)" }} />
 
       {/* Tour card */}
-      <div className="relative z-10 flex flex-col items-center gap-6 max-w-md px-8">
+      <motion.div
+        className="relative z-10 flex flex-col items-center gap-6 max-w-sm w-full mx-4 px-8 py-10 rounded-2xl"
+        style={{
+          backgroundColor: "#ffffff",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)",
+        }}
+        initial={{ scale: 0.95, y: 12 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
         {/* Step indicator dots */}
         <div className="flex items-center gap-2">
           {TOUR_STEPS.map((_, i) => (
@@ -110,7 +119,7 @@ export function IntroTour() {
               animate={{
                 width: i === step ? 20 : 6,
                 height: 6,
-                backgroundColor: i === step ? "var(--eg-flow)" : "var(--eg-muted)",
+                backgroundColor: i === step ? "#0087cd" : "#cbd5e1",
               }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
             />
@@ -120,67 +129,78 @@ export function IntroTour() {
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
-            className="flex flex-col items-center gap-4 text-center"
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="flex flex-col items-center gap-5 text-center"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
           >
-            {/* Icon with glow ring */}
-            <div className="w-20 h-20 rounded-full border border-[var(--eg-flow)]/30 flex items-center justify-center relative">
-              <motion.div
-                className="absolute inset-0 rounded-full border border-[var(--eg-flow)]/15"
-                animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0, 0.2] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
+            {/* Icon ring */}
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "#f0f7fd", border: "1.5px solid #bfdbf7" }}
+            >
               {current.icon}
             </div>
 
             <div>
-              <h2 className="font-display text-xl font-bold tracking-[0.2em] text-[var(--eg-flow)] mb-1"
-                  style={{ textShadow: "0 0 20px var(--eg-flow-dim)" }}>
+              <h2
+                className="text-lg font-bold mb-1"
+                style={{ color: "#0f172a", fontFamily: "Outfit, sans-serif", letterSpacing: "-0.01em" }}
+              >
                 {current.title}
               </h2>
-              <p className="font-display text-[10px] tracking-[0.25em] text-[var(--eg-alert)] uppercase font-bold">
+              <p
+                className="text-[11px] font-semibold uppercase tracking-widest"
+                style={{ color: "#0087cd", fontFamily: "Outfit, sans-serif" }}
+              >
                 {current.subtitle}
               </p>
             </div>
 
-            <p className="text-sm text-[var(--eg-text)] leading-relaxed max-w-xs">
+            <p
+              className="text-sm leading-relaxed max-w-xs"
+              style={{ color: "#475569", fontFamily: "Outfit, sans-serif" }}
+            >
               {current.description}
             </p>
           </motion.div>
         </AnimatePresence>
 
         {/* Controls */}
-        <div className="flex items-center gap-4 mt-2">
+        <div className="flex items-center gap-4 mt-1">
           <button
             onClick={skip}
-            className="px-4 py-2 text-[10px] font-display tracking-[0.15em] text-[var(--eg-text-dim)] hover:text-[var(--eg-text-bright)] transition-colors"
+            className="px-4 py-2 text-sm transition-colors"
+            style={{ color: "#94a3b8", fontFamily: "Outfit, sans-serif" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#475569")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}
           >
-            SKIP TOUR
+            Skip tour
           </button>
           <motion.button
             onClick={advance}
-            className="px-6 py-2 rounded-md border border-[var(--eg-flow)]/40 bg-[var(--eg-flow)]/10 text-[var(--eg-flow)] font-display text-[10px] tracking-[0.18em] font-bold hover:bg-[var(--eg-flow)]/20 transition-colors"
-            whileHover={{ scale: 1.03 }}
+            className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
+            style={{ backgroundColor: "#0087cd", fontFamily: "Outfit, sans-serif" }}
+            whileHover={{ scale: 1.03, backgroundColor: "#0072b3" }}
             whileTap={{ scale: 0.97 }}
           >
-            {step >= TOUR_STEPS.length - 1 ? "GET STARTED" : "NEXT"}
+            {step >= TOUR_STEPS.length - 1 ? "Get started" : "Next"}
           </motion.button>
         </div>
 
         {/* Progress bar */}
-        <div className="w-48 h-0.5 bg-[var(--eg-border)] rounded-full overflow-hidden">
+        <div className="w-40 h-0.5 rounded-full overflow-hidden" style={{ backgroundColor: "#e2e8f0" }}>
           <motion.div
-            className="h-full bg-[var(--eg-flow)] rounded-full"
+            className="h-full rounded-full"
+            style={{ backgroundColor: "#0087cd" }}
             key={step}
             initial={{ width: "0%" }}
             animate={{ width: "100%" }}
             transition={{ duration: AUTO_ADVANCE_MS / 1000, ease: "linear" }}
           />
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
