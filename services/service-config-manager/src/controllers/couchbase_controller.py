@@ -228,7 +228,7 @@ class CouchbaseController:
                 self.cluster = None  # Clear invalid connection
 
         auth = PasswordAuthenticator(self.username, self.password)
-        cluster_options = ClusterOptions(auth)
+        cluster_options = ClusterOptions(auth, enable_dns_srv=False)
 
         if self.tls:
             cluster_options.verify_credentials = True

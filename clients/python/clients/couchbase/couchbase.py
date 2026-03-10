@@ -37,7 +37,7 @@ class CouchbaseClient:
         if self._cluster is None:
             auth = PasswordAuthenticator(self._conf.username, self._conf.password)
             url = self._conf.protocol + "://" + self._conf.host
-            self._cluster = Cluster(url, ClusterOptions(auth))
+            self._cluster = Cluster(url, ClusterOptions(auth, enable_dns_srv=False))
             self._cluster.wait_until_ready(timedelta(seconds=500))
         return self._cluster
 
