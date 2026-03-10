@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "polytope": {
+      "type": "http",
+      "url": "http://localhost:31338/mcp",
+      "alwaysAllow": [],
+      "disabled": false
+    }
+  }
+}
